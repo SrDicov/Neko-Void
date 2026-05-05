@@ -1,8 +1,37 @@
 [ca/desrt/dconf-editor]
 relocatable-schemas-user-paths={'ca.desrt.dconf-editor.Demo.Relocatable': '/ca/desrt/dconf-editor/Demo/relocatable/', 'org.mate.panel.applet.workspace-switcher': '/org/mate/panel/objects/workspace-switcher/prefs/', 'org.mate.panel.applet.clock': '/org/mate/panel/objects/clock/prefs/', 'org.mate.panel.applet.notification-area': '/org/mate/panel/objects/notification-area/prefs/', 'org.mate.panel.applet.window-list-previews': '/org/mate/panel/objects/window-list/prefs/', 'org.mate.panel.applet.window-list-previews': '/org/mate/panel/objects/object-0/prefs/', 'org.mate.panel.applet.workspace-switcher': '/org/mate/panel/objects/object-2/prefs/', 'org.mate.panel.applet.clock': '/org/mate/panel/objects/object-3/prefs/', 'org.mate.panel.applet.notification-area': '/org/mate/panel/objects/object-4/prefs/', 'org.mate.panel.applet.window-list-previews': '/org/mate/panel/objects/object-1/prefs/'}
 
+[org/gnome/desktop/interface]
+cursor-blink=true
+cursor-blink-time=1200
+cursor-size=0
+cursor-theme=''
+font-name='Sans 10'
+gtk-key-theme=''
+gtk-theme='Dracula'
+icon-theme='Tela-dracula-dark'
+
+[org/gnome/desktop/peripherals/mouse]
+double-click=400
+drag-threshold=8
+
+[org/gnome/desktop/sound]
+event-sounds=false
+input-feedback-sounds=false
+theme-name='default'
+
+[org/gnome/desktop/wm/preferences]
+action-middle-click-titlebar='lower'
+button-layout='icon,menu:minimize,maximize,close'
+
+[org/gnome/gnome-screenshot]
+delay=0
+include-pointer=false
+last-save-directory='file:///home/javierc/Pictures'
+
 [org/gtk/settings/color-chooser]
-selected-color=(true, 0.14117647058823529, 0.12156862745098039, 0.19215686274509805, 1.0)
+custom-colors=[(0.10763555555555557, 0.10711111111111112, 0.13333333333333333, 1.0), (0.17072617449664432, 0.15180000000000002, 0.18000000000000002, 1.0), (0.083333333333333343, 0.083333333333333343, 0.083333333333333343, 1.0), (0.11764705882352941, 0.12156862745098039, 0.16078431372549021, 1.0)]
+selected-color=(true, 0.10763555555555557, 0.10711111111111112, 0.13333333333333333, 1.0)
 
 [org/gtk/settings/file-chooser]
 date-format='regular'
@@ -15,7 +44,7 @@ sort-column='name'
 sort-directories-first=false
 sort-order='descending'
 type-format='category'
-window-position=(411, 74)
+window-position=(408, 96)
 window-size=(1099, 824)
 
 [org/mate/caja-open-terminal]
@@ -67,12 +96,22 @@ icon-theme='Tela-dracula-dark'
 [org/mate/desktop/peripherals/keyboard]
 numlock-state='off'
 
+[org/mate/desktop/peripherals/keyboard/kbd]
+layouts=['us\tintl']
+options=@as []
+
+[org/mate/desktop/peripherals/keyboard/preview]
+height=810
+width=1440
+x=240
+y=145
+
 [org/mate/desktop/peripherals/mouse]
 cursor-theme='Bibata-Gruvbox'
 
 [org/mate/desktop/session]
 idle-delay=55
-session-start=1777588124
+session-start=1778023867
 
 [org/mate/engrampa/general]
 unar-open-zip=false
@@ -82,7 +121,7 @@ list-mode='as-folder'
 name-column-width=250
 show-path=false
 sort-method='name'
-sort-type='ascending'
+sort-type='descending'
 
 [org/mate/engrampa/ui]
 sidebar-width=200
@@ -103,6 +142,7 @@ object-id-list=['object-0', 'object-1', 'object-2', 'object-3', 'object-4', 'obj
 toplevel-id-list=['toplevel-0']
 
 [org/mate/panel/objects/object-0]
+locked=true
 object-type='menu'
 panel-right-stick=false
 position=0
@@ -112,6 +152,7 @@ use-menu-path=false
 
 [org/mate/panel/objects/object-1]
 applet-iid='WnckletFactory::WindowListApplet'
+locked=true
 object-type='applet'
 panel-right-stick=false
 position=32
@@ -119,6 +160,7 @@ toplevel-id='toplevel-0'
 
 [org/mate/panel/objects/object-2]
 applet-iid='WnckletFactory::WorkspaceSwitcherApplet'
+locked=true
 object-type='applet'
 panel-right-stick=false
 position=1657
@@ -126,6 +168,7 @@ toplevel-id='toplevel-0'
 
 [org/mate/panel/objects/object-3]
 applet-iid='ClockAppletFactory::ClockApplet'
+locked=true
 object-type='applet'
 panel-right-stick=false
 position=1594
@@ -139,6 +182,7 @@ show-week-numbers=false
 
 [org/mate/panel/objects/object-4]
 applet-iid='NotificationAreaAppletFactory::NotificationArea'
+locked=true
 object-type='applet'
 panel-right-stick=false
 position=1488
@@ -146,6 +190,7 @@ toplevel-id='toplevel-0'
 
 [org/mate/panel/objects/object-5]
 applet-iid='WnckletFactory::ShowDesktopApplet'
+locked=true
 object-type='applet'
 panel-right-stick=true
 position=32
@@ -170,7 +215,7 @@ history-search-for=['strncpy(file_counts[0].path, home_path, sizeof(file_counts[
 side-panel-active-page=827629879
 side-panel-size=200
 size=(650, 500)
-state=132
+state=4
 statusbar-visible=true
 
 [org/mate/pluma/plugins/filebrowser/on-load]
@@ -190,6 +235,7 @@ border-effect='none'
 delay=0
 include-border=true
 include-pointer=true
+last-save-directory='file:///home/javierc/Desktop'
 
 [org/mate/settings-daemon/plugins/media-keys]
 home='<Alt>e'
@@ -209,6 +255,7 @@ col-26-width=131
 col-8-width=62
 
 [org/mate/terminal/profiles/default]
+background-darkness=0.85507246376811596
 background-type='transparent'
 palette='#2E2E34343636:#CCCC00000000:#4E4E9A9A0606:#C4C4A0A00000:#34346565A4A4:#757550507B7B:#060698209A9A:#D3D3D7D7CFCF:#555557575353:#EFEF29292929:#8A8AE2E23434:#FCFCE9E94F4F:#72729F9FCFCF:#ADAD7F7FA8A8:#3434E2E2E2E2:#EEEEEEEEECEC'
 visible-name='Default'
