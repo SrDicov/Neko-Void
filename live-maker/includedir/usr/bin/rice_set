@@ -1,44 +1,44 @@
 #!/bin/bash
+# ==============================================================================
+# NEKO VOID: SCRIPT DE INICIALIZACIÓN POST-INSTALACIÓN
+# ==============================================================================
 
-# Ruta del archivo de marca
 MARKER_FILE="$HOME/.rices.set"
 
 runn(){
-# Aplicar configuración de apariencia personalizada para MATE
-xdg-user-dirs-update && xdg-user-dirs-update --force
-gsettings set org.mate.caja-open-terminal desktop-opens-home-dir true
+    echo "Iniciando configuración final de Neko Void..."
+    
+    # 0. Seguro de carga de entorno Wayland (CRÍTICO)
+    sleep 2 
+    export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
+    export XDG_CURRENT_DESKTOP=sway
 
-# Tema GTK y Marco: Juno
-gsettings set org.mate.interface gtk-theme "Dracula"
-gsettings set org.mate.Marco.general theme "Dracula"
+    # 1. Crear las carpetas de usuario
+    xdg-user-dirs-update && xdg-user-dirs-update --force
 
-# Tema de iconos: pixelitos-dark
-gsettings set org.mate.interface icon-theme "pixelitos-dark"
+    # 2. Forzar Tema Oscuro en GTK
+    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+    gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'
+    gsettings set org.gnome.desktop.interface cursor-theme 'Adwaita'
 
-# Tema de cursor: Bibata-Gruvbox
-gsettings set org.mate.peripherals-mouse cursor-theme "Bibata-Gruvbox"
+    # 3. Disparar Matugen (Motor de color dinámico)
+    if command -v matugen &> /dev/null; then
+        echo "Generando paleta de colores con Matugen..."
+        matugen -c "$HOME/.config/matugen/config.toml" image "/usr/share/backgrounds/edernity.png" --mode dark --source-color-index 0 || true
+        killall -SIGUSR2 waybar 2>/dev/null || true
+    fi
 
-# Fondo de pantalla
-gsettings set org.mate.background picture-filename "/usr/share/backgrounds/kyoko241.png"
-gsettings set org.mate.background picture-options "stretched"  
-# Opciones: none, wallpaper, centered, scaled, stretched, zoom, spanned
-#Keys
-dconf write /org/mate/marco/global-keybindings/run-command-terminal "'<Alt>Return'"
-dconf write /org/mate/settings-daemon/plugins/media-keys/home "'<Alt>e'"
-dconf load / < /usr/share/rice/backup_dconf_completo.txt
-/usr/lib/Neko-Wizard/neko-store &
-/usr/bin/mate_monitor &
-# Crear el archivo de marca para evitar reejecución
-touch "$MARKER_FILE"
+    # 4. Lanzar Neko Store / Wizard
+    if [ -f "/usr/lib/Neko-Wizard/neko-store" ]; then
+        /usr/lib/Neko-Wizard/neko-store &
+    fi
 
-echo "✓ Apariencia MATE configurada: Juno + pixelitos-dark + Bibata-Gruvbox + edernity.png"
+    touch "$MARKER_FILE"
+    echo "✓ Entorno SwayFX configurado exitosamente."
 }
 
-# Verificar si ya se ejecutó la configuración
 if [ -f "$MARKER_FILE" ]; then
-    /usr/bin/mate_monitor &
-    echo "✓ La configuración de apariencia ya fue aplicada (archivo $MARKER_FILE encontrado)."
-else
-runn
+    echo "✓ La configuración ya fue aplicada."
+else 
+    runn
 fi
-
