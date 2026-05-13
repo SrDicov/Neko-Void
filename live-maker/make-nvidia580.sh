@@ -1,25 +1,14 @@
 #!/bin/bash
-#
-# NekoVoid Live ISO Builder - Nonfree Edition
-# Genera la ISO con soporte nonfree: Steam, gaming, drivers propietarios, etc.
-#
-
 set -e
 
-# ─────────────────────────────────────────────
-# Configuración de salida
-# ─────────────────────────────────────────────
-ISO_NAME="nekovoid-rolling-nvidia.iso"
-ISO_TITLE="NekoVoid"
+# ─── Configuración de salida ───
+ISO_NAME="nekovoid-rtx5060ti-ryzen7.iso"
+ISO_TITLE="NekoVoid RTX 5060 Ti Edition"
 
-# ─────────────────────────────────────────────
-# Repositorios (nonfree + multilib)
-# ─────────────────────────────────────────────
-REPOS_PKGS="void-repo-nonfree void-repo-multilib void-repo-multilib-nonfree"
+# ─── Repositorios ───
+REPOS_PKGS="void-repo-nonfree void-repo-multilib"
 
-# ─────────────────────────────────────────────
-# Sistema base y utilidades
-# ─────────────────────────────────────────────
+# ─── Sistema base y utilidades ───
 BASE_SYSTEM="
     base-system
     at-spi2-core
@@ -41,12 +30,12 @@ BASE_SYSTEM="
 "
 
 SYSTEM_UTILS="
-    7zip
     p7zip
     unrar
     zip
-    xxd
+    unzip
     xz
+    vim-common
     btop
     fastfetch
     curl
@@ -66,9 +55,7 @@ SYSTEM_UTILS="
     chrony
 "
 
-# ─────────────────────────────────────────────
-# Networking
-# ─────────────────────────────────────────────
+# ─── Networking ───
 NETWORKING="
     NetworkManager
     network-manager-applet
@@ -76,9 +63,7 @@ NETWORKING="
     iw
 "
 
-# ─────────────────────────────────────────────
-# Audio (PipeWire stack completo)
-# ─────────────────────────────────────────────
+# ─── Audio (PipeWire) ───
 AUDIO="
     pipewire
     wireplumber
@@ -88,34 +73,32 @@ AUDIO="
     libjack-pipewire
     pavucontrol
     pulsemixer
+    rsync
     volumeicon
 "
 
-# ─────────────────────────────────────────────
-# Xorg + drivers GPU
-# ─────────────────────────────────────────────
+# ─── Xorg + Drivers NVIDIA ───
 XORG="
     xorg
-    xmirror
-    libva-intel-driver
-    intel-media-driver
+    xorg-video-drivers
     orca
 "
 
 GPU_DRIVERS="
+    nvidia
+    nvidia-libs-32bit
+    nvidia-settings
     mesa
     mesa-dri
     mesa-vaapi
     vulkan-loader
-    Vulkan-Tools
+    vulkan-tools
     libglvnd
-    linux-firmware-intel
-    linux-firmware-amd
+    linux-firmware
+    amd-ucode
 "
 
-# ─────────────────────────────────────────────
-# Escritorio MATE
-# ─────────────────────────────────────────────
+# ─── Escritorio MATE ───
 MATE_DESKTOP="
     mate
     mate-extra
@@ -142,9 +125,7 @@ MATE_DESKTOP="
     lxappearance
 "
 
-# ─────────────────────────────────────────────
-# Aplicaciones de escritorio
-# ─────────────────────────────────────────────
+# ─── Aplicaciones ───
 DESKTOP_APPS="
     firefox
     ristretto
@@ -156,19 +137,14 @@ DESKTOP_APPS="
     gnome-software
 "
 
-# ─────────────────────────────────────────────
-# Flatpak + portales
-# ─────────────────────────────────────────────
+# ─── Flatpak ───
 FLATPAK="
     flatpak
     xdg-desktop-portal
     xdg-desktop-portal-gtk
-    octoxbps
 "
 
-# ─────────────────────────────────────────────
-# Fuentes
-# ─────────────────────────────────────────────
+# ─── Fuentes ───
 FONTS="
     noto-fonts-emoji
     noto-fonts-cjk
@@ -180,9 +156,7 @@ FONTS="
     terminus-font
 "
 
-# ─────────────────────────────────────────────
-# Multimedia / codecs
-# ─────────────────────────────────────────────
+# ─── Multimedia ───
 MULTIMEDIA="
     ffmpeg
     gstreamer1
@@ -192,56 +166,34 @@ MULTIMEDIA="
     gst-plugins-ugly1
 "
 
-# ─────────────────────────────────────────────
-# Librerías 32-bit (requeridas para Steam)
-# ─────────────────────────────────────────────
+# ─── Soporte 32-bit para Steam y NVIDIA ───
 MULTILIB_32BIT="
     mesa-32bit
     mesa-dri-32bit
+    nvidia-libs-32bit
 "
 
-# ─────────────────────────────────────────────
-# Gaming
-# ─────────────────────────────────────────────
+# ─── Gaming ───
 GAMING="
+    steam
     gamemode
     MangoHud
 "
 
-# ─────────────────────────────────────────────
-# Otros
-# ─────────────────────────────────────────────
+# ─── Otros ───
 OTHER="
     ntp
     zramen
 "
 
-# ─────────────────────────────────────────────
-# Accesibilidad
-# ─────────────────────────────────────────────
+# ─── Accesibilidad ───
 ACCESSIBILITY="
     espeakup
     void-live-audio
     brltty
 "
 
-# ─────────────────────────────────────────────
-# Driver NVIDIA (descomentar si tienes GPU NVIDIA)
-# ─────────────────────────────────────────────
-#NVIDIA="nvidia nvidia-libs-32bit"
-NVIDIA="
-    nvidia580
-    nvidia580-dkms
-    nvidia580-firmware
-    nvidia580-libs
-    nvidia580-gtklibs
-    nvidia580-libs-32bit
-    nvidia580-opencl
-"
-
-# ─────────────────────────────────────────────
-# Construir la lista completa de paquetes
-# ─────────────────────────────────────────────
+# ─── Construcción de la lista de paquetes ───
 ALL_PACKAGES="
     ${REPOS_PKGS}
     ${BASE_SYSTEM}
@@ -258,14 +210,13 @@ ALL_PACKAGES="
     ${GAMING}
     ${OTHER}
     ${ACCESSIBILITY}
-    ${NVIDIA}
 "
 
-# Limpiar espacios extra y newlines, convertir a una línea
-PACKAGES=$(echo ${ALL_PACKAGES} | tr -s ' ')
+# Limpiar espacios y convertir a una sola línea
+PACKAGES=$(echo ${ALL_PACKAGES} | xargs)
 
 echo "============================================="
-echo " NekoVoid Live ISO Builder (Nonfree)"
+echo " NekoVoid Live ISO Builder (RTX 5060 Ti)"
 echo "============================================="
 echo ""
 echo "ISO de salida: ${ISO_NAME}"
@@ -277,5 +228,5 @@ sudo ./mklive.sh \
     -o "${ISO_NAME}" \
     -T "${ISO_TITLE}" \
     -p "${PACKAGES}" \
-    -v linux-mainline \
-    -S "dbus elogind NetworkManager lightdm polkitd rtkit sshd chronyd zramen"
+    -S "dbus NetworkManager lightdm polkitd rtkit sshd chronyd zramen" \
+    -C "live.autologin live.user=anon live.accessibility"
