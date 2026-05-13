@@ -1,14 +1,11 @@
 #!/bin/bash
 set -e
 
-# ─── Configuración de salida ───
 ISO_NAME="nekovoid-rtx5060ti-ryzen7.iso"
 ISO_TITLE="NekoVoid RTX 5060 Ti Edition"
 
-# ─── Repositorios ───
 REPOS_PKGS="void-repo-nonfree void-repo-multilib"
 
-# ─── Sistema base y utilidades ───
 BASE_SYSTEM="
     base-system
     at-spi2-core
@@ -55,7 +52,6 @@ SYSTEM_UTILS="
     chrony
 "
 
-# ─── Networking ───
 NETWORKING="
     NetworkManager
     network-manager-applet
@@ -63,7 +59,6 @@ NETWORKING="
     iw
 "
 
-# ─── Audio (PipeWire) ───
 AUDIO="
     pipewire
     wireplumber
@@ -77,7 +72,6 @@ AUDIO="
     volumeicon
 "
 
-# ─── Xorg + Drivers NVIDIA ───
 XORG="
     xorg
     xorg-video-drivers
@@ -98,7 +92,6 @@ GPU_DRIVERS="
     amd-ucode
 "
 
-# ─── Escritorio MATE ───
 MATE_DESKTOP="
     mate
     mate-extra
@@ -125,7 +118,6 @@ MATE_DESKTOP="
     lxappearance
 "
 
-# ─── Aplicaciones ───
 DESKTOP_APPS="
     firefox
     ristretto
@@ -137,14 +129,12 @@ DESKTOP_APPS="
     gnome-software
 "
 
-# ─── Flatpak ───
 FLATPAK="
     flatpak
     xdg-desktop-portal
     xdg-desktop-portal-gtk
 "
 
-# ─── Fuentes ───
 FONTS="
     noto-fonts-emoji
     noto-fonts-cjk
@@ -156,7 +146,6 @@ FONTS="
     terminus-font
 "
 
-# ─── Multimedia ───
 MULTIMEDIA="
     ffmpeg
     gstreamer1
@@ -166,34 +155,29 @@ MULTIMEDIA="
     gst-plugins-ugly1
 "
 
-# ─── Soporte 32-bit para Steam y NVIDIA ───
 MULTILIB_32BIT="
     mesa-32bit
     mesa-dri-32bit
     nvidia-libs-32bit
 "
 
-# ─── Gaming ───
 GAMING="
     steam
     gamemode
     MangoHud
 "
 
-# ─── Otros ───
 OTHER="
     ntp
     zramen
 "
 
-# ─── Accesibilidad ───
 ACCESSIBILITY="
     espeakup
     void-live-audio
     brltty
 "
 
-# ─── Construcción de la lista de paquetes ───
 ALL_PACKAGES="
     ${REPOS_PKGS}
     ${BASE_SYSTEM}
@@ -212,7 +196,6 @@ ALL_PACKAGES="
     ${ACCESSIBILITY}
 "
 
-# Limpiar espacios y convertir a una sola línea
 PACKAGES=$(echo ${ALL_PACKAGES} | xargs)
 
 echo "============================================="
@@ -223,7 +206,7 @@ echo "ISO de salida: ${ISO_NAME}"
 echo "Paquetes totales: $(echo ${PACKAGES} | wc -w)"
 echo ""
 
-sudo ./mklive.sh \
+./mklive.sh \
     -I includedir \
     -o "${ISO_NAME}" \
     -T "${ISO_TITLE}" \

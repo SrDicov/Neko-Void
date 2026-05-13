@@ -1,0 +1,56 @@
+name: Build NekoVoid RTX 5060 Ti ISO
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-iso:
+    name: ISO para RTX 5060 Ti / Ryzen 7
+    runs-on: ubuntu-latest
+
+    container:
+      image: 'ghcr.io/void-linux/void-mklive:latest'
+      options: --privileged
+      volumes:
+        - /dev:/dev
+
+    steps:
+      - name: 1. Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: 2. Preparar entorno e instalar dependencias
+        shell: sh
+        run: |
+          xbps-install -Syu xbps || xbps-install -uy xbps
+          xbps-install -yu
+          xbps-install -y git bash wget curl file dos2unix xorriso squashfs-tools
+
+      - name: 3. Normalizar scripts y permisos
+        shell: bash
+        run: |
+          # Asegurar saltos de línea Unix y eliminar 'sudo' (el contenedor ya es root)
+          find . -type f -name "*.sh" -exec dos2unix {} +
+          sed -i 's/sudo //g' *.sh
+          chmod +x make-nvidia.sh mklive.sh
+
+      - name: 4. Compilar NekoVoid para RTX 5060 Ti
+        shell: bash
+        run: ./make-nvidia.sh
+
+      - name: 5. Generar suma de verificación
+        shell: bash
+        run: sha256sum *.iso > sha256sum.txt
+
+      - name: 6. Subir artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: NekoVoid-RTX5060Ti
+          path: |
+            *.iso
+            sha256sum.txt
+          if-no-files-found: error
+          retention-days: 5
