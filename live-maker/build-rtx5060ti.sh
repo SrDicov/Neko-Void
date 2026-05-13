@@ -88,7 +88,7 @@ GPU_DRIVERS="
     mesa-dri
     mesa-vaapi
     vulkan-loader
-    vulkan-tools
+    Vulkan-Tools
     libglvnd
     linux-firmware
 "
