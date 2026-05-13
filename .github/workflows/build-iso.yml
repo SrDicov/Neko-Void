@@ -29,21 +29,26 @@ jobs:
           xbps-install -yu
           xbps-install -y git bash wget curl file dos2unix xorriso squashfs-tools
 
-      - name: 3. Normalizar scripts y permisos
+      - name: 3. Normalizar scripts y permisos (dentro de live-maker)
         shell: bash
         run: |
-          # Asegurar saltos de línea Unix y eliminar 'sudo' (el contenedor ya es root)
+          cd live-maker
+          # Convertir saltos de línea y eliminar 'sudo' (el contenedor ya es root)
           find . -type f -name "*.sh" -exec dos2unix {} +
           sed -i 's/sudo //g' *.sh
-          chmod +x make-nvidia.sh mklive.sh
+          chmod +x build-rtx5060ti.sh mklive.sh
 
       - name: 4. Compilar NekoVoid para RTX 5060 Ti
         shell: bash
-        run: ./make-nvidia.sh
+        run: |
+          cd live-maker
+          ./build-rtx5060ti.sh
 
-      - name: 5. Generar suma de verificación
+      - name: 5. Mover ISO a raíz y generar checksum
         shell: bash
-        run: sha256sum *.iso > sha256sum.txt
+        run: |
+          cp live-maker/*.iso .
+          sha256sum *.iso > sha256sum.txt
 
       - name: 6. Subir artefactos
         uses: actions/upload-artifact@v4
