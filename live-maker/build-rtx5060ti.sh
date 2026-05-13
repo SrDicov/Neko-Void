@@ -1,11 +1,14 @@
 #!/bin/bash
 set -e
 
+# ─── Configuración de salida ───
 ISO_NAME="nekovoid-rtx5060ti-ryzen7.iso"
 ISO_TITLE="NekoVoid RTX 5060 Ti Edition"
 
+# ─── Repositorios ───
 REPOS_PKGS="void-repo-nonfree void-repo-multilib"
 
+# ─── Sistema base y utilidades ───
 BASE_SYSTEM="
     base-system
     at-spi2-core
@@ -81,7 +84,6 @@ XORG="
 GPU_DRIVERS="
     nvidia
     nvidia-libs-32bit
-    nvidia-settings
     mesa
     mesa-dri
     mesa-vaapi
@@ -89,7 +91,6 @@ GPU_DRIVERS="
     vulkan-tools
     libglvnd
     linux-firmware
-    amd-ucode
 "
 
 MATE_DESKTOP="
@@ -155,12 +156,6 @@ MULTIMEDIA="
     gst-plugins-ugly1
 "
 
-MULTILIB_32BIT="
-    mesa-32bit
-    mesa-dri-32bit
-    nvidia-libs-32bit
-"
-
 GAMING="
     steam
     gamemode
@@ -174,7 +169,6 @@ OTHER="
 
 ACCESSIBILITY="
     espeakup
-    void-live-audio
     brltty
 "
 
