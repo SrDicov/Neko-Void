@@ -27,8 +27,8 @@ echo "---------------------------------------------------"
 echo "¿Deseas compilar las ISOs en la nube ahora? (s/n)"
 read -r respuesta
 if [[ "$respuesta" =~ ^[sS]$ ]]; then
-    echo "=> Disparando Workflow U..."
-    gh workflow run build-iso-u.yml
+    echo "=> Disparando Workflow..."
+    gh workflow run build-iso.yml
 
     echo "🚀 ¡Workflows iniciados! Revisa la pestaña 'Actions' en GitHub."
 else
