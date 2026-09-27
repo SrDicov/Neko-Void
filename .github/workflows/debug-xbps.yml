@@ -35,4 +35,8 @@ jobs:
           ls /tmp/dbg-root/var/db/xbps/keys/ | wc -l
           XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y base-files syslinux grub-i386-efi grub-x86_64-efi memtest86+ || true
           echo "--- reintento solo xbps-triggers:"; XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y xbps-triggers || true
+          echo "--- via su anon + sudo (como neko-builder):"
+          chown -R anon:anon /tmp/dbg-root /tmp/dbg-cache
+          su anon -c "XBPS_ARCH=x86_64-musl sudo xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y xbps-triggers" || true
+          echo "--- env via sudo:"; su anon -c "sudo env | sort" || true
           echo FIN
