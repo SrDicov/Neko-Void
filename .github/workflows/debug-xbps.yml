@@ -29,14 +29,15 @@ jobs:
           set -x
           cd "$GITHUB_WORKSPACE/live-maker"
           R="--repository=https://repo-ci.voidlinux.org/current/musl --repository=https://repo-ci.voidlinux.org/current/musl/nonfree --repository=https://github.com/SrDicov/z-repo-musl/releases/download/stable --repository=https://sourceforge.net/projects/neko-void/files/repo/musl"
-          rm -rf /tmp/dbg-root /tmp/dbg-cache && mkdir -p /tmp/dbg-root/var/db/xbps/keys /tmp/dbg-cache
-          cp keys/*.plist /tmp/dbg-root/var/db/xbps/keys/ && ls /tmp/dbg-root/var/db/xbps/keys/ | wc -l
-          XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -S || true
-          ls /tmp/dbg-root/var/db/xbps/keys/ | wc -l
-          XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y base-files syslinux grub-i386-efi grub-x86_64-efi memtest86+ || true
-          echo "--- reintento solo xbps-triggers:"; XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y xbps-triggers || true
-          echo "--- via su anon + sudo (como neko-builder):"
-          chown -R anon:anon /tmp/dbg-root /tmp/dbg-cache
-          su anon -c "XBPS_ARCH=x86_64-musl sudo xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y xbps-triggers" || true
-          echo "--- env via sudo:"; su anon -c "sudo env | sort" || true
+          RH="--repository=https://repo-ci.voidlinux.org/current"
+          rm -rf /tmp/dbg-host /tmp/dbg-target /tmp/dbg-cache && mkdir -p /tmp/dbg-host/var/db/xbps/keys /tmp/dbg-target/var/db/xbps/keys /tmp/dbg-cache
+          cp keys/*.plist /tmp/dbg-host/var/db/xbps/keys/
+          cp keys/*.plist /tmp/dbg-target/var/db/xbps/keys/
+          XBPS_ARCH=x86_64 xbps-install -r /tmp/dbg-host $RH -S || true
+          XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-target $R -S || true
+          echo "--- host install primero (como install_prereqs):"
+          XBPS_ARCH=x86_64 xbps-install -r /tmp/dbg-host $RH -c /tmp/dbg-cache -y base-files libgcc dash coreutils sed tar gawk || true
+          echo "--- target install via su anon + sudo (como neko-builder):"
+          chown -R anon:anon /tmp/dbg-host /tmp/dbg-target /tmp/dbg-cache
+          su anon -c "XBPS_ARCH=x86_64-musl sudo -E xbps-install -r /tmp/dbg-target $R -c /tmp/dbg-cache -y base-files syslinux grub-i386-efi grub-x86_64-efi memtest86+" || true
           echo FIN
