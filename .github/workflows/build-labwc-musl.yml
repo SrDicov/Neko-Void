@@ -51,6 +51,17 @@ jobs:
           curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
           chmod 644 /var/db/xbps/keys/zlinux-repo.pub
 
+      - name: Diagnose RSA (temporal)
+        run: |
+          cd "$GITHUB_WORKSPACE/live-maker"
+          xbps-install --version
+          ls keys/ | wc -l
+          PKGVER=$(XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-default.voidlinux.org/current/musl -x xbps-triggers)
+          echo "repodata dice: $PKGVER"
+          curl -sL -o /tmp/d.xbps "https://repo-default.voidlinux.org/current/musl/${PKGVER}.x86_64-musl.xbps"
+          curl -sL -o /tmp/d.sig2 "https://repo-default.voidlinux.org/current/musl/${PKGVER}.x86_64-musl.xbps.sig2"
+          sha256sum /tmp/d.xbps /tmp/d.sig2
+
       - name: Build LabWC MUSL ISO
         run: |
           set -e
