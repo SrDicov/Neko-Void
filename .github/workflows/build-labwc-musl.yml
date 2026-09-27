@@ -57,9 +57,9 @@ jobs:
           xbps-install --version; echo "exit=$?"
           ls keys/ | wc -l
           getent hosts repo-default.voidlinux.org; echo "dns exit=$?"
-          echo "--- query repo-default:"; XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-default.voidlinux.org/current/musl -Rs xbps-triggers; echo "query1 exit=$?"
-          echo "--- query repo-de:"; XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-de.voidlinux.org/current/musl -Rs xbps-triggers; echo "query2 exit=$?"
-          echo "--- curl repodata:"; curl -sSL -o /tmp/rd -w 'http:%{http_code} size:%{size_download} ip:%{remote_ip}\n' https://repo-default.voidlinux.org/current/musl/x86_64-musl-repodata; echo "curl exit=$?"
+          echo "--- query repo-default:"; XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-default.voidlinux.org/current/musl -Rs xbps-triggers || echo "query1 exit=$?"
+          echo "--- query repo-de:"; XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-de.voidlinux.org/current/musl -Rs xbps-triggers || echo "query2 exit=$?"
+          echo "--- curl repodata:"; curl -sSL -o /tmp/rd -w 'http:%{http_code} size:%{size_download} ip:%{remote_ip}\n' https://repo-default.voidlinux.org/current/musl/x86_64-musl-repodata || echo "curl exit=$?"
           true
 
       - name: Build LabWC MUSL ISO
