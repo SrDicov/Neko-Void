@@ -56,7 +56,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/live-maker"
           xbps-install --version
           ls keys/ | wc -l
-          PKGVER=$(XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-default.voidlinux.org/current/musl -x xbps-triggers)
+          PKGVER=$(XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-default.voidlinux.org/current/musl -Rs xbps-triggers | awk '{print $2}' | grep '^xbps-triggers-' | sed 's/^xbps-triggers-//;q')
           echo "repodata dice: $PKGVER"
           curl -sL -o /tmp/d.xbps "https://repo-default.voidlinux.org/current/musl/${PKGVER}.x86_64-musl.xbps"
           curl -sL -o /tmp/d.sig2 "https://repo-default.voidlinux.org/current/musl/${PKGVER}.x86_64-musl.xbps.sig2"
