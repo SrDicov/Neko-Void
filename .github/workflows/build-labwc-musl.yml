@@ -54,13 +54,13 @@ jobs:
       - name: Diagnose RSA (temporal)
         run: |
           cd "$GITHUB_WORKSPACE/live-maker"
-          xbps-install --version
+          xbps-install --version; echo "exit=$?"
           ls keys/ | wc -l
-          PKGVER=$(XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-default.voidlinux.org/current/musl -Rs xbps-triggers | awk '{print $2}' | grep '^xbps-triggers-' | sed 's/^xbps-triggers-//;q')
-          echo "repodata dice: $PKGVER"
-          curl -sL -o /tmp/d.xbps "https://repo-default.voidlinux.org/current/musl/${PKGVER}.x86_64-musl.xbps"
-          curl -sL -o /tmp/d.sig2 "https://repo-default.voidlinux.org/current/musl/${PKGVER}.x86_64-musl.xbps.sig2"
-          sha256sum /tmp/d.xbps /tmp/d.sig2
+          getent hosts repo-default.voidlinux.org; echo "dns exit=$?"
+          echo "--- query repo-default:"; XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-default.voidlinux.org/current/musl -Rs xbps-triggers; echo "query1 exit=$?"
+          echo "--- query repo-de:"; XBPS_ARCH=x86_64-musl xbps-query -R --repository=https://repo-de.voidlinux.org/current/musl -Rs xbps-triggers; echo "query2 exit=$?"
+          echo "--- curl repodata:"; curl -sSL -o /tmp/rd -w 'http:%{http_code} size:%{size_download} ip:%{remote_ip}\n' https://repo-default.voidlinux.org/current/musl/x86_64-musl-repodata; echo "curl exit=$?"
+          true
 
       - name: Build LabWC MUSL ISO
         run: |
