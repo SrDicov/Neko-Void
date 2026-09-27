@@ -29,5 +29,14 @@ jobs:
           cd "$GITHUB_WORKSPACE/live-maker"
           . ./base-neko-pkgs.sh
           chown -R anon:anon ./labwc/home/anon || true
-          bash -x ./mklive.sh -a x86_64-musl -I ./labwc -I ./labwc-musl -o /tmp/trace-test.iso -T NekoVoid -p "$PACKAGES_MUSL_LABWC" -v linux-mainline -S "dbus NetworkManager emptty" -r https://repo-ci.voidlinux.org/current/musl -r https://repo-ci.voidlinux.org/current/musl/nonfree -r https://github.com/SrDicov/z-repo-musl/releases/download/stable -r https://sourceforge.net/projects/neko-void/files/repo/musl -i xz -s zstd -L 22 -K 2>&1 | tail -60 || true
+          bash -x ./mklive.sh -a x86_64-musl -I ./labwc -I ./labwc-musl -o /tmp/trace-test.iso -T NekoVoid -p "$PACKAGES_MUSL_LABWC" -v linux-mainline -S "dbus NetworkManager emptty" -r https://repo-ci.voidlinux.org/current/musl -r https://repo-ci.voidlinux.org/current/musl/nonfree -r https://github.com/SrDicov/z-repo-musl/releases/download/stable -r https://sourceforge.net/projects/neko-void/files/repo/musl -i xz -s zstd -L 22 -K > $GITHUB_WORKSPACE/mktrace.log 2>&1 || true
+          grep -nE 'XBPS_ARCH=|copy_void_keys|CACHEDIR=|VOIDTARGETDIR=|REPOSITORY=\(|TARGET_ARCH=' $GITHUB_WORKSPACE/mktrace.log | head -20 || true
+          echo "--- xbps-install invocacion:"; grep -n 'xbps-install -r' $GITHUB_WORKSPACE/mktrace.log | head -5 || true
+          echo "--- builddir:"; ls -d "$GITHUB_WORKSPACE"/live-maker/mklive-build.* 2>/dev/null || true
           echo FIN-TRACE
+      - name: Subir trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mktrace
+          path: $GITHUB_WORKSPACE/mktrace.log
