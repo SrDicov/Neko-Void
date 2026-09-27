@@ -1,0 +1,38 @@
+name: Debug xbps musl (temporal)
+on:
+  workflow_dispatch:
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    container:
+      image: 'ghcr.io/void-linux/void-mklive:20250116R1'
+      options: --privileged
+      volumes:
+        - /dev:/dev
+      env:
+        PATH: '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin:/usr/local/bin:/tmp/bin'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare
+        shell: sh
+        run: |
+          xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/ xbps
+          xbps-install -yu --repository=https://repo-de.voidlinux.org/current/
+          xbps-install -y --repository=https://repo-de.voidlinux.org/current/ git bash wget curl file sudo
+          groupadd -g 1000 anon || true
+          useradd -m -u 1000 -g anon -s /bin/bash anon || true
+          echo "anon ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/anon
+          mkdir -p /var/db/xbps/keys
+          curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
+      - name: Repro exacta sin mklive
+        run: |
+          set -x
+          cd "$GITHUB_WORKSPACE/live-maker"
+          R="--repository=https://repo-ci.voidlinux.org/current/musl --repository=https://repo-ci.voidlinux.org/current/musl/nonfree --repository=https://github.com/SrDicov/z-repo-musl/releases/download/stable --repository=https://sourceforge.net/projects/neko-void/files/repo/musl"
+          rm -rf /tmp/dbg-root /tmp/dbg-cache && mkdir -p /tmp/dbg-root/var/db/xbps/keys /tmp/dbg-cache
+          cp keys/*.plist /tmp/dbg-root/var/db/xbps/keys/ && ls /tmp/dbg-root/var/db/xbps/keys/ | wc -l
+          XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -S || true
+          ls /tmp/dbg-root/var/db/xbps/keys/ | wc -l
+          XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y base-files syslinux grub-i386-efi grub-x86_64-efi memtest86+ || true
+          echo "--- reintento solo xbps-triggers:"; XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-root $R -c /tmp/dbg-cache -y xbps-triggers || true
+          echo FIN
