@@ -83,13 +83,33 @@ jobs:
           chmod -R a+rwX "$XBPS_CACHE_DIR"
 
       - name: Generate checksums
+        if: success()
         run: |
           ISO_FILE=$(find "$GITHUB_WORKSPACE" -maxdepth 3 -name "*.iso" | head -n 1)
           echo "ISO=$ISO_FILE" >> "$GITHUB_ENV"
           (cd "$(dirname "$ISO_FILE")" && sha256sum "$(basename "$ISO_FILE")" > "$(basename "$ISO_FILE")-sha256.txt")
           cat "$(dirname "$ISO_FILE")/$(basename "$ISO_FILE")-sha256.txt"
 
+      - name: Collect failure evidence
+        if: failure()
+        run: |
+          chmod -R a+rX "$GITHUB_WORKSPACE/.cache" 2>/dev/null || true
+          chmod -R a+rX "$GITHUB_WORKSPACE/live-maker"/mklive-build.* 2>/dev/null || true
+          ls -la "$GITHUB_WORKSPACE/live-maker"/mklive-build.*/void-target/var/db/xbps/keys/ 2>/dev/null || true
+          sha256sum "$GITHUB_WORKSPACE/.cache"/xbps/*/*.xbps "$GITHUB_WORKSPACE/.cache"/xbps/*/*.sig2 2>/dev/null || true
+
+      - name: Upload failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-evidence
+          path: |
+            ${{ github.workspace }}/.cache/xbps/
+            ${{ github.workspace }}/live-maker/mklive-build.*/void-target/var/db/xbps/keys/
+            ${{ github.workspace }}/live-maker/mklive-build.*/void-target/var/db/xbps/https___*/
+
       - name: Publish MUSL release
+        if: success()
         uses: softprops/action-gh-release@v2
         with:
           tag_name: musl
