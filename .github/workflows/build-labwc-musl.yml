@@ -51,19 +51,6 @@ jobs:
           curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
           chmod 644 /var/db/xbps/keys/zlinux-repo.pub
 
-      - name: Diagnose repos (temporal)
-        run: |
-          cd "$GITHUB_WORKSPACE/live-maker"
-          xbps-install --version || true
-          ls keys/ | wc -l || true
-          for u in "https://repo-ci.voidlinux.org/current/musl" "https://repo-ci.voidlinux.org/current/musl/nonfree" "https://github.com/SrDicov/z-repo-musl/releases/download/stable"; do
-            curl -sSL -o /dev/null -w "repo $u -> http:%{http_code} %{size_download}B ip:%{remote_ip}\n" "$u/x86_64-musl-repodata" || true
-          done
-          curl -sSL -o /tmp/t.xbps -w "pkg http:%{http_code} %{size_download}B\n" "https://repo-ci.voidlinux.org/current/musl/xbps-triggers-0.131_1.x86_64-musl.xbps" || true
-          curl -sSL -o /tmp/t.sig2 -w "sig http:%{http_code} %{size_download}B\n" "https://repo-ci.voidlinux.org/current/musl/xbps-triggers-0.131_1.x86_64-musl.xbps.sig2" || true
-          sha256sum /tmp/t.xbps /tmp/t.sig2 || true
-          true
-
       - name: Build LabWC MUSL ISO
         run: |
           set -e
