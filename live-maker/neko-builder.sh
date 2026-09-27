@@ -310,14 +310,12 @@ build_iso() {
 
     cmd_args+=(-S "$SERVICES_BASE $dm_service")
 
-    # ponytail: repos glibc y musl no se mezclan; musl usa oficiales musl + z-repo-musl
-    # repo-default (Fastly) primero: autoritativo y consistente para bootstrap
+    # ponytail: repos glibc y musl no se mezclan. musl usa repo-ci (mirror de CI
+    # upstream, consistente) + z-repo-musl + compatibilidad sourceforge
     if [[ "$arch" == *-musl ]]; then
         REPOS=(
-            -r https://repo-default.voidlinux.org/current/musl
-            -r https://repo-default.voidlinux.org/current/musl/nonfree
-            -r https://repo-de.voidlinux.org/current/musl
-            -r https://repo-de.voidlinux.org/current/musl/nonfree
+            -r https://repo-ci.voidlinux.org/current/musl
+            -r https://repo-ci.voidlinux.org/current/musl/nonfree
             -r https://github.com/SrDicov/z-repo-musl/releases/download/stable
             -r https://sourceforge.net/projects/neko-void/files/repo/musl
         )

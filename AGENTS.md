@@ -16,7 +16,7 @@ ISO builder for Neko-Void Linux (Void-based live ISOs). No app code, no tests/li
 - Requires privileged Void Linux (`ghcr.io/void-linux/void-mklive:20250116R1`) + `sudo`; never works on plain Ubuntu/host. Do not attempt locally, use CI.
 - `cd live-maker && sudo bash neko-builder.sh <desktop> [-e "pkg1 pkg2"]`
 - Valid `<desktop>` = `case` labels in `build_iso()`: `mate matelibre kde lxqt i3 xfce icewm jwm cinnamon labwc labwc-musl niri musl nvidia nvidia-kde`. `--help` text and `interactive_menu()` still reference removed `xorg/xlibre/rolling/rollibre/doble*` names — stale, trust the `case`.
-- `-r` repos are conditional on `$arch`: `*-musl` gets official musl + musl/nonfree + z-repo-musl + sourceforge musl; glibc keeps the old list. Never mix.
+- `-r` repos are conditional on `$arch`: `*-musl` gets repo-ci musl + musl/nonfree + z-repo-musl + sourceforge musl (repo-ci is upstream's CI mirror, consistent); glibc keeps the old list. Never mix.
 - Autologin/PAM/polkit overlay setup is NOT in the builder; each target needs its pre-steps from `.github/workflows/build-iso.yml` (matrix `case "$DESKTOP"`). Copy those blocks when adding a target.
 - Root `README.md` build examples (`mate`/`matelibre` only) are partial; workflow matrix is the full list.
 
