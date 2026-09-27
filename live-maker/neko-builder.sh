@@ -72,6 +72,7 @@ Escritorios disponibles:
   ${GREEN}nvidia-kde${RESET}   KDE + NVIDIA (kernel 6.18, drivers via postsetup)
   ${GREEN}cinnamon${RESET}   Cinnamon (kernel mainline)
   ${GREEN}labwc${RESET}   Labwc (kernel LTS)
+  ${GREEN}labwc-musl${RESET} Labwc musl + Noctalia (x86_64-musl)
   ${GREEN}lxde${RESET}       LXDE (kernel mainline)
   ${GREEN}i3${RESET}       I3 (kernel mainline)
 
@@ -105,6 +106,7 @@ build_iso() {
 
     local pkg_var=""
     local includedir=""
+    local includedir2=""
     local kernel_kver=""
     local dm_service=""
     local iso_name=""
@@ -192,6 +194,15 @@ build_iso() {
             iso_name="nekovoid-labwc-$VERSION.iso"
             arch="x86_64"
             ;;
+        labwc-musl)
+            pkg_var="PACKAGES_MUSL_LABWC"
+            includedir="./labwc"
+            includedir2="./labwc-musl"
+            kernel_kver="$KERNEL_DEFAULT"
+            dm_service="emptty"
+            iso_name="nekovoid-labwc-musl-$VERSION.iso"
+            arch="x86_64-musl"
+            ;;
         niri)
             pkg_var="PACKAGES_NIRI"
             includedir="./niri"
@@ -271,6 +282,12 @@ build_iso() {
     local cmd_args=(
         -a "$arch"
         -I "$includedir"
+    )
+    # ponytail: segundo -I pisa al primero en mklive; solo labwc-musl lo usa (repos musl sobre overlay labwc)
+    if [ -n "$includedir2" ]; then
+        cmd_args+=(-I "$includedir2")
+    fi
+    cmd_args+=(
         -o "$iso_name"
         -T "$ISO_TITLE"
         -p "$packages"
@@ -293,7 +310,30 @@ build_iso() {
 
     cmd_args+=(-S "$SERVICES_BASE $dm_service")
 
-    sudo ./mklive.sh  -r https://github.com/xlibre-void/xlibre/releases/latest/download -r https://github.com/Neko-Void-Linux/repo-neko/releases/download/stable  -r https://repo-de.voidlinux.org/current/nonfree -r https://repo-de.voidlinux.org/current  -r https://repo-de.voidlinux.org/current/multilib/nonfree -r https://repo-de.voidlinux.org/current/multilib -r https://repo-de.voidlinux.org/current/musl/bootstrap -r https://repo-de.voidlinux.org/current/musl -r https://repo-de.voidlinux.org/current/musl/nonfree -r https://sourceforge.net/projects/neko-void/files/repo/musl -i xz -s zstd -L 22 "${cmd_args[@]}"
+    # ponytail: repos glibc y musl no se mezclan; musl usa oficiales musl + z-repo-musl
+    if [[ "$arch" == *-musl ]]; then
+        REPOS=(
+            -r https://repo-de.voidlinux.org/current/musl
+            -r https://repo-de.voidlinux.org/current/musl/nonfree
+            -r https://github.com/SrDicov/z-repo-musl/releases/download/stable
+            -r https://sourceforge.net/projects/neko-void/files/repo/musl
+        )
+    else
+        REPOS=(
+            -r https://github.com/xlibre-void/xlibre/releases/latest/download
+            -r https://github.com/Neko-Void-Linux/repo-neko/releases/download/stable
+            -r https://repo-de.voidlinux.org/current/nonfree
+            -r https://repo-de.voidlinux.org/current
+            -r https://repo-de.voidlinux.org/current/multilib/nonfree
+            -r https://repo-de.voidlinux.org/current/multilib
+            -r https://repo-de.voidlinux.org/current/musl/bootstrap
+            -r https://repo-de.voidlinux.org/current/musl
+            -r https://repo-de.voidlinux.org/current/musl/nonfree
+            -r https://sourceforge.net/projects/neko-void/files/repo/musl
+        )
+    fi
+
+    sudo ./mklive.sh "${REPOS[@]}" -i xz -s zstd -L 22 "${cmd_args[@]}"
     sha256sum ${iso_name} >> ${iso_name}.txt
 }
 

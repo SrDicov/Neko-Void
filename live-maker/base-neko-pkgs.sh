@@ -694,6 +694,10 @@ LABWC_PACKAGES="
     ${DEFAULT}
     ${LABWC}
 "
+MUSL_LABWC_PACKAGES="
+    ${MUSL}
+    ${LABWC}
+"
 NIRI_PACKAGES="
     ${DEFAULT}
     ${NIRI}
@@ -710,5 +714,6 @@ PACKAGES_JWM=$(echo ${JWM_PACKAGES} | tr -s ' ')
 PACKAGES_LXDE=$(echo ${LXDE_PACKAGES} | tr -s ' ')
 PACKAGES_CINNAMON=$(echo ${CINNAMON_PACKAGES} | tr -s ' ')
 PACKAGES_LABWC=$(echo ${LABWC_PACKAGES} | tr -s ' ')
+PACKAGES_MUSL_LABWC=$(echo ${MUSL_LABWC_PACKAGES} | tr -s ' ')
 PACKAGES_NIRI=$(echo ${NIRI_PACKAGES} | tr -s ' ')
 PACKAGES_MUSL=$(echo ${MUSL_PACKAGES} | tr -s ' ')
