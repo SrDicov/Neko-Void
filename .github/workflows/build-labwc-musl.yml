@@ -110,12 +110,24 @@ jobs:
             ${{ github.workspace }}/live-maker/mklive-build.*/void-target/var/db/xbps/keys/
             ${{ github.workspace }}/live-maker/mklive-build.*/void-target/var/db/xbps/https___*/
 
+      - name: Split ISO for release
+        if: success()
+        run: |
+          # GitHub no acepta assets >=2GB: se publica partida
+          split -b 1900M "$ISO" "$ISO-part-"
+          sha256sum "$ISO-part-"* > "$ISO-sha256.txt"
+          cat "$ISO-sha256.txt"
+
       - name: Publish MUSL release
         if: success()
         uses: softprops/action-gh-release@v2
         with:
           tag_name: musl
           name: Neko Void MUSL
+          body: |
+            ISO partida en trozos de 1900M. Para recomponer:
+            `cat nekovoid-*.iso-part-* > nekovoid-labwc-musl.iso`
+            Verificar con `sha256sum -c`.
           files: |
-            ${{ env.ISO }}
+            ${{ env.ISO }}-part-*
             ${{ env.ISO }}-sha256.txt
