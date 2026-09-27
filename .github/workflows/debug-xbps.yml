@@ -39,4 +39,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mktrace
-          path: $GITHUB_WORKSPACE/mktrace.log
+          path: ${{ github.workspace }}/mktrace.log
