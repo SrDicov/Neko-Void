@@ -24,20 +24,10 @@ jobs:
           echo "anon ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/anon
           mkdir -p /var/db/xbps/keys
           curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
-      - name: Repro exacta sin mklive
+      - name: mklive directo con trace
         run: |
-          set -x
           cd "$GITHUB_WORKSPACE/live-maker"
-          R="--repository=https://repo-ci.voidlinux.org/current/musl --repository=https://repo-ci.voidlinux.org/current/musl/nonfree --repository=https://github.com/SrDicov/z-repo-musl/releases/download/stable --repository=https://sourceforge.net/projects/neko-void/files/repo/musl"
-          RH="--repository=https://repo-ci.voidlinux.org/current"
-          rm -rf /tmp/dbg-host /tmp/dbg-target /tmp/dbg-cache && mkdir -p /tmp/dbg-host/var/db/xbps/keys /tmp/dbg-target/var/db/xbps/keys /tmp/dbg-cache
-          cp keys/*.plist /tmp/dbg-host/var/db/xbps/keys/
-          cp keys/*.plist /tmp/dbg-target/var/db/xbps/keys/
-          XBPS_ARCH=x86_64 xbps-install -r /tmp/dbg-host $RH -S || true
-          XBPS_ARCH=x86_64-musl xbps-install -r /tmp/dbg-target $R -S || true
-          echo "--- host install primero (como install_prereqs):"
-          XBPS_ARCH=x86_64 xbps-install -r /tmp/dbg-host $RH -c /tmp/dbg-cache -y base-files libgcc dash coreutils sed tar gawk || true
-          echo "--- target install via su anon + sudo (como neko-builder):"
-          chown -R anon:anon /tmp/dbg-host /tmp/dbg-target /tmp/dbg-cache
-          su anon -c "XBPS_ARCH=x86_64-musl sudo -E xbps-install -r /tmp/dbg-target $R -c /tmp/dbg-cache -y base-files syslinux grub-i386-efi grub-x86_64-efi memtest86+" || true
-          echo FIN
+          . ./base-neko-pkgs.sh
+          chown -R anon:anon ./labwc/home/anon || true
+          bash -x ./mklive.sh -a x86_64-musl -I ./labwc -I ./labwc-musl -o /tmp/trace-test.iso -T NekoVoid -p "$PACKAGES_MUSL_LABWC" -v linux-mainline -S "dbus NetworkManager emptty" -r https://repo-ci.voidlinux.org/current/musl -r https://repo-ci.voidlinux.org/current/musl/nonfree -r https://github.com/SrDicov/z-repo-musl/releases/download/stable -r https://sourceforge.net/projects/neko-void/files/repo/musl -i xz -s zstd -L 22 -K 2>&1 | tail -60 || true
+          echo FIN-TRACE
