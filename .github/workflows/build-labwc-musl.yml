@@ -2,6 +2,14 @@ name: Neko Void - LabWC MUSL
 
 on:
   workflow_dispatch:
+    inputs:
+      bootloader:
+        description: 'Bootloader de la ISO (grub = GRUB+isolinux, limine = Limine BIOS+UEFI)'
+        type: choice
+        options:
+          - grub
+          - limine
+        default: grub
 
 permissions:
   contents: write
@@ -67,7 +75,7 @@ jobs:
           chown -R anon:anon "$GITHUB_WORKSPACE"
           chmod 755 ./labwc/home/anon
           rm -f ./labwc/home/anon/.Xauthority ./labwc/home/anon/.ICEauthority
-          su anon -c "cd '$GITHUB_WORKSPACE/live-maker' && bash neko-builder.sh labwc-musl"
+          su anon -c "cd '$GITHUB_WORKSPACE/live-maker' && bash neko-builder.sh labwc-musl -b '${{ inputs.bootloader }}'"
           # La cache la guarda el runner; necesita lectura para otros UIDs
           chmod -R a+rwX "$XBPS_CACHE_DIR"
 
@@ -109,8 +117,8 @@ jobs:
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: musl
-          name: Neko Void MUSL
+          tag_name: ${{ inputs.bootloader == 'limine' && 'musl-limine' || 'musl' }}
+          name: Neko Void MUSL (${{ inputs.bootloader }})
           body: |
             ISO partida en trozos de 1900M. Para recomponer:
             `cat nekovoid-*.iso-part-* > nekovoid-labwc-musl.iso`

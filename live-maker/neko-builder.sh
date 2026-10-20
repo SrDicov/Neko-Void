@@ -82,12 +82,17 @@ Especiales:
 
 Opciones:
   -e, --extra "pkg1 pkg2"   Agregar paquetes extra a la ISO
+  -b, --bootloader "grub|limine"
+                            Bootloader de la ISO (por defecto: grub)
+                            grub   = GRUB (UEFI) + isolinux (BIOS), como siempre
+                            limine = Limine para BIOS y UEFI (dualboot)
   -h, --help                Mostrar esta ayuda
 
 Ejemplos:
   $(basename "$0")                        # Menú interactivo
   $(basename "$0") icejwm                 # Construir IceWM directamente
   $(basename "$0") kde -e "gimp inkscape" # KDE + paquetes extra
+  $(basename "$0") labwc -b limine        # Labwc con Limine (BIOS+UEFI)
   $(basename "$0") doble                  # Construir ambos (libre + nonfree)
 EOF
 }
@@ -257,6 +262,14 @@ build_iso() {
         packages="$packages linux6.18-headers"
     fi
 
+    # ─── Bootloader Limine: ISO propia + paquete limine dentro del live ───
+    # (el paquete sirve para instalar Limine a mano en el disco y encadenar
+    #  Windows/Linux: `limine bios-install /dev/sdX`)
+    if [ "$BOOTLOADER" = limine ]; then
+        iso_name="${iso_name%.iso}-limine.iso"
+        packages="$packages limine"
+    fi
+
     # ─── Banner informativo ───
     echo ""
     echo "============================================="
@@ -265,6 +278,7 @@ build_iso() {
     echo ""
     echo "  Escritorio:      ${desktop}"
     echo "  ISO de salida:   ${iso_name}"
+    echo "  Bootloader:      ${BOOTLOADER}"
     echo "  Paquetes total:  $(echo "${packages}" | wc -w)"
     if [ -n "$kernel_kver" ]; then
         echo "  Kernel:          ${kernel_kver}"
@@ -334,7 +348,13 @@ build_iso() {
         )
     fi
 
-    sudo ./mklive.sh "${REPOS[@]}" -i xz -s zstd -L 22 "${cmd_args[@]}"
+    # ponytail: neko-limine.sh remasteriza el árbol que genera mklive.sh con
+    # Limine (BIOS+UEFI). mklive.sh sigue siendo el motor de ambos.
+    if [ "$BOOTLOADER" = limine ]; then
+        sudo ./neko-limine.sh "${REPOS[@]}" -i xz -s zstd -L 22 "${cmd_args[@]}"
+    else
+        sudo ./mklive.sh "${REPOS[@]}" -i xz -s zstd -L 22 "${cmd_args[@]}"
+    fi
     sha256sum ${iso_name} >> ${iso_name}.txt
 }
 
@@ -400,6 +420,7 @@ interactive_menu() {
 # ─────────────────────────────────────────────
 EXTRA_PKGS=""
 DESKTOP=""
+BOOTLOADER="${NEKO_BOOTLOADER:-grub}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -413,6 +434,17 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
             EXTRA_PKGS="$2"
+            shift 2
+            ;;
+        -b|--bootloader)
+            if [ $# -lt 2 ]; then
+                echo "Error: -b/--bootloader requiere un argumento (grub|limine)"
+                exit 1
+            fi
+            case "$2" in
+                grub|limine) BOOTLOADER="$2" ;;
+                *) echo "Error: bootloader inválido '$2' (usa grub o limine)"; exit 1 ;;
+            esac
             shift 2
             ;;
         --)
@@ -437,6 +469,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ─── Si no hay escritorio especificado → modo interactivo ───
+case "$BOOTLOADER" in
+    grub|limine) ;;
+    *) echo "Error: bootloader inválido '$BOOTLOADER' (usa grub o limine)"; exit 1 ;;
+esac
+
 if [ -z "$DESKTOP" ]; then
     interactive_menu
     exit 0

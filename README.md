@@ -32,12 +32,18 @@ Then, execute the builder script with your desired configuration:
    bash neko-builder.sh matelibre
    
    ```
+ * **Build ISO with Limine instead of GRUB (BIOS + UEFI, dualboot):**
+   ```bash
+   bash neko-builder.sh labwc -b limine
+   
+   ```
 
 ## neko-builder.sh Usage Details
 The build script supports multiple options. For example:
  * ./neko-builder.sh - Runs in interactive mode.
  * ./neko-builder.sh <desktop> - Builds a specific desktop environment (e.g., mare, matelibre, kde).
  * ./neko-builder.sh <desktop> -e "pkg..." - Builds with extra specified packages.
+ * ./neko-builder.sh <desktop> -b grub|limine - Chooses the ISO bootloader: `grub` (default, GRUB for UEFI + isolinux for BIOS) or `limine` (Limine for both BIOS and UEFI, with chainload entries for Windows/other Linux).
  * ./neko-builder.sh doble - Builds both Xlibre and Xorg ISOs.
  * ./neko-builder.sh doble-isor - Builds both Rollibre and Rolling ISOs.
 ## Related Projects and Resources

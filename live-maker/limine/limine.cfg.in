@@ -1,0 +1,78 @@
+# Neko Void — configuración de Limine (BIOS + UEFI)
+# Generado por neko-limine.sh desde limine/limine.cfg.in — no editar a mano.
+#
+# Rutas: boot() = volumen desde el que arrancó Limine (la propia ISO),
+# por eso el kernel/initrd se leen de /boot dentro de la ISO.
+
+timeout: 15
+quiet: no
+interface_branding: @@ISO_TITLE@@
+interface_branding_colour: 00aaaa
+interface_help_colour: 00aa00
+
+wallpaper: boot():/boot/splash.png
+wallpaper_style: centered
+
+${KERNEL}=boot():/boot/@@KERNEL_IMG@@
+${INITRD}=boot():/boot/initrd
+${CMDLINE}=@@CMDLINE@@
+
+/@@ENTRY_TITLE@@
+comment: Arranque normal del sistema live
+protocol: linux
+cmdline: ${CMDLINE}
+path: ${KERNEL}
+module_path: ${INITRD}
+
+/@@ENTRY_TITLE@@ (RAM)
+comment: El sistema live completo se carga en RAM
+protocol: linux
+cmdline: rd.live.ram ${CMDLINE}
+path: ${KERNEL}
+module_path: ${INITRD}
+
+/@@ENTRY_TITLE@@ (sin gráficos)
+comment: Arranque con nomodeset, para GPUs con problemas
+protocol: linux
+cmdline: nomodeset ${CMDLINE}
+path: ${KERNEL}
+module_path: ${INITRD}
+
+/@@ENTRY_TITLE@@ con lectura de pantalla
+comment: live.accessibility live.autologin
+protocol: linux
+cmdline: live.accessibility live.autologin ${CMDLINE}
+path: ${KERNEL}
+module_path: ${INITRD}
+
+/@@ENTRY_TITLE@@ con lectura de pantalla (RAM)
+comment: live.accessibility live.autologin rd.live.ram
+protocol: linux
+cmdline: live.accessibility live.autologin rd.live.ram ${CMDLINE}
+path: ${KERNEL}
+module_path: ${INITRD}
+
+/@@ENTRY_TITLE@@ con lectura de pantalla (sin gráficos)
+comment: live.accessibility live.autologin nomodeset
+protocol: linux
+cmdline: live.accessibility live.autologin nomodeset ${CMDLINE}
+path: ${KERNEL}
+module_path: ${INITRD}
+
+/Memtest86+ (RAM)
+comment: Prueba de memoria (solo UEFI)
+if_fw_type: UEFI
+protocol: efi_chainload
+image_path: boot():/boot/memtest.efi
+
+/Sistema del primer disco (BIOS/MBR)
+comment: Encadena el MBR del primer disco: Windows o Linux instalado
+if_fw_type: BIOS
+protocol: bios_chainload
+drive: 1
+
+/Windows (entrada UEFI)
+comment: Reinicia en la entrada UEFI llamada "Windows"; usa la tecla E del menu para renombrarla
+if_fw_type: UEFI
+protocol: efi_boot_entry
+entry: Windows
