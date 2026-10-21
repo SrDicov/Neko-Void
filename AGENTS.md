@@ -14,7 +14,7 @@ ISO builder for Neko-Void Linux (Void-based live ISOs). No app code, no tests/li
 - `labwc-musl/` is NOT a full overlay: only `etc/xbps.d/` (musl repos + z-repo-musl, empty files shadowing glibc `multilib`/`xlibre` confs) + `var/db/xbps/keys/zlinux-repo.pub`. `neko-builder.sh labwc-musl` passes `-I ./labwc -I ./labwc-musl` (mklive allows multiple `-I`, last wins).
 
 ## Build
-- Requires privileged Void Linux (`ghcr.io/void-linux/void-mklive:20250116R1`) + `sudo`; never works on plain Ubuntu/host. Do not attempt locally, use CI.
+- Requires privileged Void Linux (`ghcr.io/void-linux/void-glibc:20261001R1`) + `sudo`; never works on plain Ubuntu/host. Do not attempt locally, use CI. The host kernel must have the `loop` module (mklive builds the squashfs on a loop device); a kernel without it silently produces an empty squashfs.
 - `cd live-maker && sudo bash neko-builder.sh <desktop> [-e "pkg1 pkg2"] [-b grub|limine]`
 - Bootloader: `-b grub` (default, unchanged) or `-b limine` (Limine for BIOS+UEFI). The Limine variant suffixes the ISO name with `-limine` and adds the `limine` package to the live system.
 - Valid `<desktop>` = `case` labels in `build_iso()`: `mate matelibre kde lxqt i3 xfce icewm jwm cinnamon labwc labwc-musl niri musl nvidia nvidia-kde`. `--help` text and `interactive_menu()` still reference removed `xorg/xlibre/rolling/rollibre/doble*` names — stale, trust the `case`.
