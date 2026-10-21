@@ -67,7 +67,7 @@ jobs:
           BOOT: ${{ inputs.bootloader }}
         run: |
           set -e
-          docker run --rm --privileged -i \
+          docker run --rm --privileged --cap-add=FOWNER -i \
             -e DESKTOP="$DESKTOP" -e BOOT="$BOOT" \
             -v /dev:/dev -v "$GITHUB_WORKSPACE:/workspace" -w /workspace/live-maker \
             ghcr.io/void-linux/void-glibc:20261001R1 sh -s <<'EOS'
