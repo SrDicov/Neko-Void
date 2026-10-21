@@ -39,7 +39,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: neko-build-${{ github.ref }}
@@ -258,9 +258,32 @@ jobs:
           ISO_FILE=$(find "$GITHUB_WORKSPACE" -name "*.iso" | head -n 1)
           if [ -n "$ISO_FILE" ]; then
             ISO_NAME=$(basename "$ISO_FILE")
+            echo "ISO_FILE=$ISO_FILE" >> "$GITHUB_ENV"
             sha256sum "$ISO_FILE" > "${GITHUB_WORKSPACE}/${ISO_NAME}-sha256.txt"
             cat "${GITHUB_WORKSPACE}/${ISO_NAME}-sha256.txt"
           fi
+
+      - name: Split ISO for release
+        if: success()
+        run: |
+          # GitHub no acepta assets >=2GB: se publica partida
+          split -b 1900M "$ISO_FILE" "$ISO_FILE-part-"
+          sha256sum "$ISO_FILE-part-"* > "$ISO_FILE-part-sha256.txt"
+          cat "$ISO_FILE-part-sha256.txt"
+
+      - name: Publish release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.bootloader == 'limine' && 'iso-limine' || 'iso' }}
+          name: Neko Void ISO (${{ matrix.iso }}, ${{ inputs.bootloader }})
+          body: |
+            ISO partida en trozos de 1900M. Para recomponer:
+            `cat $(basename ${{ env.ISO_FILE }})-part-* > $(basename ${{ env.ISO_FILE }})`
+            Verificar con `sha256sum -c`.
+          files: |
+            ${{ env.ISO_FILE }}-part-*
+            ${{ env.ISO_FILE }}-part-sha256.txt
 
       - name: Upload ISO to Hugging Face
         # ponytail: el secret HF_TOKEN solo existe en el repo upstream; aqui
