@@ -45,6 +45,9 @@ concurrency:
   group: neko-build-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  XBPS_CACHE_DIR: ${{ github.workspace }}/.cache/xbps
+
 jobs:
   build-iso:
     name: Build ISO (${{ matrix.iso }})
@@ -57,6 +60,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # ponytail: la cache guarda .xbps descargados; xbps solo baja lo nuevo.
+      # La clave NO lleva hashFiles: si cambia la lista de paquetes, una clave
+      # nueva invalida el cache entero y obliga a descargarlo todo de nuevo.
+      - name: Restore xbps cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.XBPS_CACHE_DIR }}
+          key: xbps-iso-v2
+          restore-keys: xbps-iso-
 
       # ponytail: el build va en docker run y no en `container:` porque las
       # acciones JS del runner (checkout, cache) necesitan libstdc++ dentro
@@ -73,6 +86,11 @@ jobs:
             ghcr.io/void-linux/void-glibc:20261001R1 sh -s <<'EOS'
           set -e
           export LANG=C.UTF-8
+          # El cachedir vive en el workspace para que la cache persista.
+          # Target y host comparten cache: los .xbps llevan la arch en el
+          # nombre, asi que no colisionan.
+          ln -sfn /workspace/.cache/xbps/target xbps-cachedir-x86_64-musl
+          ln -sfn /workspace/.cache/xbps/host xbps-cachedir-x86_64
           xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
           xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3 python3-pip rsync openssh
 

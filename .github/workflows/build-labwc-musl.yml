@@ -30,12 +30,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ponytail: la cache guarda .xbps descargados; xbps solo baja lo nuevo/actualizado
+      # ponytail: la cache guarda .xbps descargados; xbps solo baja lo nuevo/actualizado.
+      # La clave NO lleva hashFiles: si cambia la lista de paquetes, una clave
+      # nueva invalida 1.8 GB de cache y obliga a volver a descargarlo todo.
+      # Con clave estable, xbps reutiliza lo que ya hay y solo baja lo que cambia.
       - name: Restore xbps cache
         uses: actions/cache@v4
         with:
           path: ${{ env.XBPS_CACHE_DIR }}
-          key: xbps-labwc-musl-${{ hashFiles('live-maker/base-neko-pkgs.sh', 'live-maker/neko-builder.sh', 'live-maker/labwc-musl/**') }}
+          key: xbps-labwc-musl-v2
           restore-keys: xbps-labwc-musl-
 
       # ponytail: el build va en docker run y no en `container:` porque las
@@ -55,9 +58,11 @@ jobs:
               set -e
               export LANG=C.UTF-8
               # El cachedir del target vive en el workspace para que la cache
-              # persista; el del host usa su propio (root): si comparten, xbps
-              # intenta hacer chmod de .xbps de otro uid y falla con EPERM.
+              # persista; el del host usa el suyo propio pero tambien se
+              # guarda. Los .xbps llevan la arch en el nombre, asi que ambos
+              # target y host comparten cache sin colisionar.
               ln -sfn /workspace/.cache/xbps/target xbps-cachedir-x86_64-musl
+              ln -sfn /workspace/.cache/xbps/host xbps-cachedir-x86_64
               xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
               xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3
               groupadd -g 1000 anon || true
