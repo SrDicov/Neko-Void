@@ -272,7 +272,7 @@ jobs:
         run: |
           # GitHub no acepta assets >=2GB: se publica partida
           split -b 1900M "$ISO_FILE" "$ISO_FILE-part-"
-          sha256sum "$ISO_FILE-part-"* > "$ISO_FILE-part-sha256.txt"
+          (cd "$(dirname "$ISO_FILE")" && sha256sum "$(basename "$ISO_FILE")"-part-* > "$(basename "$ISO_FILE")"-part-sha256.txt)
           cat "$ISO_FILE-part-sha256.txt"
 
       - name: Publish release

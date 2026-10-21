@@ -111,7 +111,7 @@ jobs:
         run: |
           # GitHub no acepta assets >=2GB: se publica partida
           split -b 1900M "$ISO" "$ISO-part-"
-          sha256sum "$ISO-part-"* > "$ISO-sha256.txt"
+          (cd "$(dirname "$ISO")" && sha256sum "$(basename "$ISO")"-part-* > "$(basename "$ISO")"-sha256.txt)
           cat "$ISO-sha256.txt"
 
       - name: Publish MUSL release
