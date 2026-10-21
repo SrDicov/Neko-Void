@@ -15,6 +15,10 @@
 # Uso: sudo ./neko-limine.sh [opciones de mklive.sh ...]
 
 set -euo pipefail
+# ponytail: libisofs convierte los nombres con el charset del locale; sin un
+# locale UTF-8 busca un charmap externo que Void no empaqueta y falla con
+# "Charset conversion error". void-mklive traia LANG=en_US.UTF-8; void-glibc no.
+export LANG="${LANG:-C.UTF-8}"
 
 cd "$(dirname "$(readlink -f "$0")")"
 
@@ -160,11 +164,15 @@ XORRISO="xorriso"
 [ -x "$VOIDHOSTDIR/usr/bin/xorriso" ] && XORRISO="$VOIDHOSTDIR/usr/bin/xorriso"
 
 info "Remasterizando la ISO con Limine..."
+# ponytail: sin -input-charset, libisofs usa su tabla interna y no busca un
+# charmap externo (Void no empaqueta /usr/share/libisoburn). Sin -hfsplus:
+# el volumen HFS+ no lo usa nadie aqui y rompe el remasterizado con glibc
+# 2.41 ("Charset conversion error").
 "$XORRISO" -as mkisofs \
     -iso-level 3 -rock -joliet -joliet-long -max-iso9660-filenames \
     -omit-period -omit-version-number -relaxed-filenames -allow-lowercase \
     -volid "$VOLID" \
-    -b limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
+    -b limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table \
     -apm-block-size 2048 --efi-boot limine-uefi-cd.bin \
     -efi-boot-part --efi-boot-image --protective-msdos-label \
     -output "$OUTPUT" "$IMAGEDIR" || die "xorriso falló"

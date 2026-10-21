@@ -27,12 +27,13 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: 'ghcr.io/void-linux/void-mklive:20250116R1'
+      image: 'ghcr.io/void-linux/void-glibc:20261001R1'
       options: --privileged
       volumes:
         - /dev:/dev
       env:
         PATH: '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin:/usr/local/bin:/tmp/bin'
+        LANG: 'C.UTF-8'
 
     steps:
       - name: Checkout
@@ -49,9 +50,10 @@ jobs:
       - name: Prepare container, users and key
         shell: sh
         run: |
-          xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/ xbps
-          xbps-install -yu --repository=https://repo-de.voidlinux.org/current/
-          xbps-install -y --repository=https://repo-de.voidlinux.org/current/ git bash wget curl file sudo python3
+          # ponytail: void-mklive:20250116R1 lleva xbps 0.59.1, que no entiende
+          # el indice plano actual de Void. void-glibc si lo lleva.
+          xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
+          xbps-install -y --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3
           groupadd -g 1000 anon || true
           useradd -m -u 1000 -g anon -s /bin/bash anon || true
           echo "anon ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/anon
@@ -121,7 +123,7 @@ jobs:
           name: Neko Void MUSL (${{ inputs.bootloader }})
           body: |
             ISO partida en trozos de 1900M. Para recomponer:
-            `cat nekovoid-*.iso-part-* > nekovoid-labwc-musl.iso`
+            `cat $(basename ${{ env.ISO }})-part-* > $(basename ${{ env.ISO }})`
             Verificar con `sha256sum -c`.
           files: |
             ${{ env.ISO }}-part-*

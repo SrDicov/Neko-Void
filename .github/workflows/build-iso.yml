@@ -55,20 +55,22 @@ jobs:
         iso: ${{ fromJson(inputs.iso == 'all' && '["i3","icejwm","kde","kde-nvidia","niri-nvidia","nvidia390","nvidia470","nvidia580","labwc","labwc-musl","lxqt","matelibre","matex","niri","xfce"]' || format('["{0}"]', inputs.iso)) }}
 
     container:
-      image: 'ghcr.io/void-linux/void-mklive:20250116R1'
+      image: 'ghcr.io/void-linux/void-glibc:20261001R1'
       options: --privileged
       volumes:
         - /dev:/dev
       env:
         PATH: '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin:/usr/local/bin:/tmp/bin'
+        LANG: 'C.UTF-8'
 
     steps:
       - name: Prepare container, system users and dependencies
         shell: sh
         run: |
-          xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/ xbps
-          xbps-install -yu --repository=https://repo-de.voidlinux.org/current/
-          xbps-install -y --repository=https://repo-de.voidlinux.org/current/ git bash wget curl file sudo python3 python3-pip rsync openssh
+          # ponytail: void-mklive:20250116R1 lleva xbps 0.59.1, que no entiende
+          # el indice plano actual de Void. void-glibc si lo lleva.
+          xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
+          xbps-install -y --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3 python3-pip rsync openssh which less
           python3 -m pip install -U "huggingface_hub[cli]" --break-system-packages
 
           groupadd -g 1000 anon

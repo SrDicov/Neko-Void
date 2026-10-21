@@ -21,7 +21,7 @@ ISO builder for Neko-Void Linux (Void-based live ISOs). No app code, no tests/li
 - `-r` repos are conditional on `$arch`: `*-musl` gets repo-ci musl + musl/nonfree + z-repo-musl + sourceforge musl (repo-ci is upstream's CI mirror, consistent); glibc keeps the old list. Never mix.
 - Autologin/PAM/polkit overlay setup is NOT in the builder; each target needs its pre-steps from `.github/workflows/build-iso.yml` (matrix `case "$DESKTOP"`). Copy those blocks when adding a target.
 - Root `README.md` build examples (`mate`/`matelibre` only) are partial; workflow matrix is the full list.
-- The void-mklive image ships xbps 0.59.1, which CANNOT read Void's current (flat) repo index → every CI build fails at repo sync. Fix inside the container before building: update xbps from repo-de/current (needs zstd+tar to unpack the .xbps).
+- The void-mklive image ships xbps 0.59.1, which CANNOT read Void's current (flat) repo index → every CI build failed at repo sync. Fixed by using `ghcr.io/void-linux/void-glibc:20261001R1` (monthly Void glibc image, xbps 0.60.7) + installing the host tools mklive needs (util-linux, e2fsprogs, dosfstools, shadow...). Local builds on the old image need the same xbps upgrade by hand.
 
 ## CI / Artifacts
 - GitHub `build-iso.yml`: manual dispatch only (`iso` choice + optional SourceForge upload), uploads to `arepaconcafe/untested-neko` HF dataset. GitLab `ci/build-{mate,xfce}.yml`: mate/xfce triggers.

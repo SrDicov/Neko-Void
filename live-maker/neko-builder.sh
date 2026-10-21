@@ -12,6 +12,9 @@
 #
 VERSION=$(date +"%Y%m%d")
 set -euo pipefail
+# ponytail: libisofs convierte los nombres con el charset del locale; sin un
+# locale UTF-8 busca un charmap externo que Void no empaqueta y el ISO falla.
+export LANG="${LANG:-C.UTF-8}"
 KERNEL_DEFAULT="linux-mainline"
 KERNEL_STABLE="linux6.18"
 # ─────────────────────────────────────────────
