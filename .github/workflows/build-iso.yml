@@ -252,6 +252,10 @@ jobs:
               ;;
           esac
           EOS
+          # El ISO lo crea root; el runner (otro uid) tiene que poder escribir
+          # ahi los checksums y los trozos del split.
+          sudo chmod 777 "$GITHUB_WORKSPACE/live-maker"
+          sudo chmod 644 "$GITHUB_WORKSPACE"/live-maker/*.iso 2>/dev/null || true
 
       - name: Generate Checksums
         run: |

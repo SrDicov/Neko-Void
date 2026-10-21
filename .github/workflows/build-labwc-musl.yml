@@ -76,6 +76,10 @@ jobs:
               chmod 755 ./labwc/home/anon
               rm -f ./labwc/home/anon/.Xauthority ./labwc/home/anon/.ICEauthority
               su anon -c "cd /workspace/live-maker && bash neko-builder.sh labwc-musl -b $BOOTLOADER"
+              # El ISO lo crea root; el runner (otro uid) tiene que poder escribir
+              # ahi los checksums y los trozos del split.
+              chmod 777 /workspace/live-maker
+              chmod 644 /workspace/live-maker/*.iso /workspace/live-maker/*.txt 2>/dev/null || true
             '
           # La cache la guarda el runner; los .xbps son de root (los creo el
           # container), asi que el runner no puede cambiarles los permisos.
