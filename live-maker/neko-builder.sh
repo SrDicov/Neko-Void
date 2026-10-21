@@ -358,7 +358,9 @@ build_iso() {
     else
         sudo ./mklive.sh "${REPOS[@]}" -i xz -s zstd -L 22 "${cmd_args[@]}"
     fi
-    sha256sum ${iso_name} >> ${iso_name}.txt
+    # ponytail: la ISO la crea root (sudo) y el builder puede correr como otro
+    # usuario: el checksum va con sudo o no se puede escribir junto a la ISO.
+    sudo sha256sum "${iso_name}" > "${iso_name}.txt"
 }
 
 # ─────────────────────────────────────────────

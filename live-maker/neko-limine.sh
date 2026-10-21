@@ -22,12 +22,16 @@ export LANG="${LANG:-C.UTF-8}"
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-# Repo del host donde está el paquete `limine` con sus binarios.
-# El host puede ser glibc o musl: el repo debe encajar con su libc.
+# Repo y arquitectura del host donde está el paquete `limine` con sus binarios.
+# El host puede ser glibc o musl: el repo y la arch deben encajar con su libc.
+# (mklive deja XBPS_ARCH=x86_64-musl en el entorno, y sin corregirlo el host
+#  buscaria el paquete para musl en un repo glibc: "not found in repository pool")
 if ldd --version 2>&1 | head -1 | grep -qi musl; then
     LIMINE_REPO="${LIMINE_REPO:-https://repo-de.voidlinux.org/current/musl}"
+    LIMINE_ARCH="x86_64-musl"
 else
     LIMINE_REPO="${LIMINE_REPO:-https://repo-de.voidlinux.org/current}"
+    LIMINE_ARCH="x86_64"
 fi
 LIMINE_DATADIR="${LIMINE_DATADIR:-/usr/share/limine}"
 
@@ -121,8 +125,8 @@ fi
 # ─── 3. Paquete limine (binarios EFI/BIOS + herramienta bios-install) ───
 if [ ! -f "$LIMINE_DATADIR/limine-bios-cd.bin" ]; then
     info "Instalando el paquete limine en el host..."
-    xbps-install -y --ignore-conf --repository="$LIMINE_REPO" limine ||
-        xbps-install -y limine ||
+    XBPS_ARCH="$LIMINE_ARCH" xbps-install -y --ignore-conf --repository="$LIMINE_REPO" limine ||
+        XBPS_ARCH="$LIMINE_ARCH" xbps-install -y limine ||
         die "No se pudo instalar limine desde $LIMINE_REPO"
 fi
 [ -x /usr/bin/limine ] || die "No se encontró /usr/bin/limine"
