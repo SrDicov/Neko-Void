@@ -26,15 +26,6 @@ jobs:
     name: Build LabWC MUSL ISO
     runs-on: ubuntu-latest
 
-    container:
-      image: 'ghcr.io/void-linux/void-glibc:20261001R1'
-      options: --privileged
-      volumes:
-        - /dev:/dev
-      env:
-        PATH: '/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin:/usr/local/bin:/tmp/bin'
-        LANG: 'C.UTF-8'
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,37 +38,39 @@ jobs:
           key: xbps-labwc-musl-${{ hashFiles('live-maker/base-neko-pkgs.sh', 'live-maker/neko-builder.sh', 'live-maker/labwc-musl/**') }}
           restore-keys: xbps-labwc-musl-
 
-      - name: Prepare container, users and key
-        shell: sh
-        run: |
-          # ponytail: void-mklive:20250116R1 lleva xbps 0.59.1, que no entiende
-          # el indice plano actual de Void. void-glibc si lo lleva.
-          xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
-          xbps-install -y --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3
-          groupadd -g 1000 anon || true
-          useradd -m -u 1000 -g anon -s /bin/bash anon || true
-          echo "anon ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/anon
-          mkdir -p /var/db/xbps/keys
-          curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
-          chmod 644 /var/db/xbps/keys/zlinux-repo.pub
-
+      # ponytail: el build va en docker run y no en `container:` porque las
+      # acciones JS del runner (checkout, cache) necesitan libstdc++ dentro
+      # del contenedor, y la imagen de Void glibc no lo trae.
       - name: Build LabWC MUSL ISO
         run: |
           set -e
-          cd "$GITHUB_WORKSPACE/live-maker"
-          chmod 1777 /tmp
-          chmod 1777 /var/tmp
           mkdir -p "$XBPS_CACHE_DIR/target" "$XBPS_CACHE_DIR/host"
           # El cachedir por defecto vive junto al builder; se enlaza al workspace para que la cache persista
-          ln -sfn "$XBPS_CACHE_DIR/target" ./xbps-cachedir-x86_64-musl
-          ln -sfn "$XBPS_CACHE_DIR/host" ./xbps-cachedir-x86_64
-          mkdir -p labwc/etc/pam.d
-          printf '#%%PAM-1.0\nauth required pam_env.so\nauth required pam_permit.so\naccount include system-login\npassword include system-login\nsession include system-login\n' > labwc/etc/pam.d/lightdm-autologin
-          chmod 644 labwc/etc/pam.d/lightdm-autologin
-          chown -R anon:anon "$GITHUB_WORKSPACE"
-          chmod 755 ./labwc/home/anon
-          rm -f ./labwc/home/anon/.Xauthority ./labwc/home/anon/.ICEauthority
-          su anon -c "cd '$GITHUB_WORKSPACE/live-maker' && bash neko-builder.sh labwc-musl -b '${{ inputs.bootloader }}'"
+          ln -sfn "$XBPS_CACHE_DIR/target" live-maker/xbps-cachedir-x86_64-musl
+          ln -sfn "$XBPS_CACHE_DIR/host" live-maker/xbps-cachedir-x86_64
+          docker run --rm --privileged \
+            -e BOOTLOADER="${{ inputs.bootloader }}" \
+            -v /dev:/dev -v "$GITHUB_WORKSPACE:/workspace" -w /workspace/live-maker \
+            ghcr.io/void-linux/void-glibc:20261001R1 sh -c '
+              set -e
+              export LANG=C.UTF-8
+              xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
+              xbps-install -y --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3
+              groupadd -g 1000 anon || true
+              useradd -m -u 1000 -g anon -s /bin/bash anon || true
+              echo "anon ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/anon
+              mkdir -p /var/db/xbps/keys
+              curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
+              chmod 644 /var/db/xbps/keys/zlinux-repo.pub
+              cd /workspace/live-maker
+              mkdir -p labwc/etc/pam.d
+              printf "#%%PAM-1.0\nauth required pam_env.so\nauth required pam_permit.so\naccount include system-login\npassword include system-login\nsession include system-login\n" > labwc/etc/pam.d/lightdm-autologin
+              chmod 644 labwc/etc/pam.d/lightdm-autologin
+              chown -R anon:anon /workspace
+              chmod 755 ./labwc/home/anon
+              rm -f ./labwc/home/anon/.Xauthority ./labwc/home/anon/.ICEauthority
+              su anon -c "cd /workspace/live-maker && bash neko-builder.sh labwc-musl -b $BOOTLOADER"
+            '
           # La cache la guarda el runner; necesita lectura para otros UIDs
           chmod -R a+rwX "$XBPS_CACHE_DIR"
 
@@ -87,14 +80,12 @@ jobs:
           ISO_FILE=$(find "$GITHUB_WORKSPACE" -maxdepth 3 -name "*.iso" | head -n 1)
           echo "ISO=$ISO_FILE" >> "$GITHUB_ENV"
           (cd "$(dirname "$ISO_FILE")" && sha256sum "$(basename "$ISO_FILE")" > "$(basename "$ISO_FILE")-sha256.txt")
-          cat "$(dirname "$ISO_FILE")/$(basename "$ISO_FILE")-sha256.txt"
+          cat "$(dirname "$ISO_FILE")"/$(basename "$ISO_FILE")-sha256.txt
 
       - name: Collect failure evidence
         if: failure()
         run: |
           chmod -R a+rX "$GITHUB_WORKSPACE/.cache" 2>/dev/null || true
-          chmod -R a+rX "$GITHUB_WORKSPACE/live-maker"/mklive-build.* 2>/dev/null || true
-          ls -la "$GITHUB_WORKSPACE/live-maker"/mklive-build.*/void-target/var/db/xbps/keys/ 2>/dev/null || true
           sha256sum "$GITHUB_WORKSPACE/.cache"/xbps/*/*.xbps "$GITHUB_WORKSPACE/.cache"/xbps/*/*.sig2 2>/dev/null || true
 
       - name: Upload failure evidence
@@ -102,10 +93,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: failure-evidence
-          path: |
-            ${{ github.workspace }}/.cache/xbps/
-            ${{ github.workspace }}/live-maker/mklive-build.*/void-target/var/db/xbps/keys/
-            ${{ github.workspace }}/live-maker/mklive-build.*/void-target/var/db/xbps/https___*/
+          path: ${{ github.workspace }}/.cache/xbps/
 
       - name: Split ISO for release
         if: success()
