@@ -263,6 +263,9 @@ jobs:
           fi
 
       - name: Upload ISO to Hugging Face
+        # ponytail: el secret HF_TOKEN solo existe en el repo upstream; aqui
+        # la subida no debe tumbar el build.
+        continue-on-error: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           DESKTOP: ${{ matrix.iso }}

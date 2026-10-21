@@ -77,6 +77,8 @@ cleanup() {
     else
         echo "Build conservado en: $WORKDIR"
     fi
+    [ -n "$LIMINE_ROOT" ] && rm -rf "$LIMINE_ROOT"
+    return 0
 }
 trap cleanup EXIT
 
@@ -123,10 +125,20 @@ else
 fi
 
 # ─── 3. Paquete limine (binarios EFI/BIOS + herramienta bios-install) ───
+# Repo explicito + arch del host: mklive deja XBPS_ARCH=x86_64-musl en el
+# entorno y la imagen de Void glibc no trae repos en /etc/xbps.d, asi que
+# sin --repository el pool de xbps esta vacio.
+# Cache propia: el cachedir de xbps es del runner y xbps no puede cambiar los
+# permisos de esos ficheros (EPERM al instalar).
+LIMINE_ROOT=""
+LIMINE_CMD=(limine)
 if [ ! -f "$LIMINE_DATADIR/limine-bios-cd.bin" ]; then
-    info "Instalando el paquete limine en el host..."
-    XBPS_ARCH="$LIMINE_ARCH" xbps-install -y --ignore-conf --repository="$LIMINE_REPO" limine ||
-        XBPS_ARCH="$LIMINE_ARCH" xbps-install -y limine ||
+    info "Instalando el paquete limine..."
+    LIMINE_ROOT="$(mktemp -d)"
+    XBPS_ARCH="$LIMINE_ARCH" XBPS_CACHE_DIR="$LIMINE_ROOT/cache" \
+        xbps-install -y --repository="$LIMINE_REPO" limine ||
+        XBPS_ARCH="$LIMINE_ARCH" XBPS_CACHE_DIR="$LIMINE_ROOT/cache" \
+            xbps-install -y limine ||
         die "No se pudo instalar limine desde $LIMINE_REPO"
 fi
 [ -x /usr/bin/limine ] || die "No se encontró /usr/bin/limine"
@@ -149,7 +161,8 @@ cp -f "$LIMINE_DATADIR/BOOTX64.EFI" "$IMAGEDIR/EFI/BOOT/BOOTX64.EFI"
 # Shell UEFI (tecla U en el menú de Limine): permite arrancar a mano Windows
 # u otro SO desde la ESP. Opcional: si el paquete no está, se sigue sin él.
 if [ ! -f /usr/share/edk2/x64/Shell_Full.efi ]; then
-    xbps-install -y --ignore-conf --repository="$LIMINE_REPO" edk2-shell >/dev/null 2>&1 || true
+    XBPS_ARCH="$LIMINE_ARCH" XBPS_CACHE_DIR="${LIMINE_ROOT:-/tmp}/cache" \
+        xbps-install -y --repository="$LIMINE_REPO" edk2-shell >/dev/null 2>&1 || true
 fi
 [ -f /usr/share/edk2/x64/Shell_Full.efi ] && cp -f /usr/share/edk2/x64/Shell_Full.efi "$IMAGEDIR/shellx64.efi"
 
@@ -183,6 +196,6 @@ info "Remasterizando la ISO con Limine..."
 
 # ─── 7. Híbrido: la ISO también arranca como disco (USB) en BIOS ───
 info "Instalando el MBR de Limine (arranque híbrido USB)..."
-limine bios-install "$OUTPUT" || die "limine bios-install falló"
+"${LIMINE_CMD[@]}" bios-install "$OUTPUT" || die "limine bios-install falló"
 
 info "ISO con Limine creada: $(readlink -f "$OUTPUT") ($(stat -c '%s' "$OUTPUT") bytes)"
