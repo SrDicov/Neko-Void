@@ -19,6 +19,9 @@ set -euo pipefail
 # locale UTF-8 busca un charmap externo que Void no empaqueta y falla con
 # "Charset conversion error". void-mklive traia LANG=en_US.UTF-8; void-glibc no.
 export LANG="${LANG:-C.UTF-8}"
+# ponytail: mklive usa xbps-install con -r, y xbps >= 0.60 ignora XBPS_ARCH
+# con -r: el target musl no resuelve sus paquetes. El wrapper pasa XBPS_ROOT.
+export XBPS_INSTALL_CMD="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/xbps-install-musl.sh"
 
 cd "$(dirname "$(readlink -f "$0")")"
 

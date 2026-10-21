@@ -15,6 +15,9 @@ set -euo pipefail
 # ponytail: libisofs convierte los nombres con el charset del locale; sin un
 # locale UTF-8 busca un charmap externo que Void no empaqueta y el ISO falla.
 export LANG="${LANG:-C.UTF-8}"
+# ponytail: mklive usa xbps-install con -r, y xbps >= 0.60 ignora XBPS_ARCH
+# con -r: el target musl no resuelve sus paquetes. El wrapper pasa XBPS_ROOT.
+export XBPS_INSTALL_CMD="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/xbps-install-musl.sh"
 KERNEL_DEFAULT="linux-mainline"
 KERNEL_STABLE="linux6.18"
 # ─────────────────────────────────────────────
