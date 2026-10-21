@@ -10,9 +10,11 @@ interface_branding: @@ISO_TITLE@@
 interface_branding_colour: 00aaaa
 interface_help_colour: 00aa00
 
-# Wallpaper a 1920x1080 (el splash 640x480 centrado sobre su propio color de
-# fondo). "stretched" lo escala a la resolucion de la pantalla; como el PNG ya
-# es 16:9 no deforma el logo.
+# Wallpaper a 1920x1080 (el splash 640x480 reescalado, con su fondo unificado
+# con el del panel de Limine y el logo a la derecha, fuera de la lista de
+# entradas). "stretched" lo escala a la resolucion de la pantalla; como el PNG
+# ya es 16:9 apenas deforma el logo. El panel del menu de Limine es
+# semitransparente: el wallpaper se ve a traves de el.
 wallpaper: boot():/boot/wallpaper.png
 wallpaper_style: stretched
 
