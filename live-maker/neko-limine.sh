@@ -38,6 +38,9 @@ LIMINE_DATADIR="${LIMINE_DATADIR:-/usr/share/limine}"
 die() { echo "ERROR: $*" >&2; exit 1; }
 info() { echo "==> $*"; }
 
+# Rootdir temporal del paquete limine (se rellena mas abajo si hay que instalarlo).
+LIMINE_ROOT=""
+
 # ─── Opciones: -o y -K los gestionamos aquí, el resto va a mklive.sh ───
 OUTPUT=""
 ISO_TITLE="NekoVoid"
@@ -130,7 +133,6 @@ fi
 # sin --repository el pool de xbps esta vacio.
 # Cache propia: el cachedir de xbps es del runner y xbps no puede cambiar los
 # permisos de esos ficheros (EPERM al instalar).
-LIMINE_ROOT=""
 LIMINE_CMD=(limine)
 if [ ! -f "$LIMINE_DATADIR/limine-bios-cd.bin" ]; then
     info "Instalando el paquete limine..."

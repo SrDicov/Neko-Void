@@ -328,13 +328,14 @@ build_iso() {
     cmd_args+=(-S "$SERVICES_BASE $dm_service")
 
     # ponytail: repos glibc y musl no se mezclan. musl usa repo-ci (mirror de CI
-    # upstream, consistente) + z-repo-musl + compatibilidad sourceforge
+    # upstream, consistente) + z-repo-musl. El repo de sourceforge queda fuera:
+    # sirve versiones viejas (neko-themes 6.5_1) firmadas con otra clave y xbps
+    # aborta al no poder verificarlas.
     if [[ "$arch" == *-musl ]]; then
         REPOS=(
             -r https://repo-ci.voidlinux.org/current/musl
             -r https://repo-ci.voidlinux.org/current/musl/nonfree
             -r https://github.com/SrDicov/z-repo-musl/releases/download/stable
-            -r https://sourceforge.net/projects/neko-void/files/repo/musl
         )
     else
         REPOS=(
