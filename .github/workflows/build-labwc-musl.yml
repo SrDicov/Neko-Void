@@ -45,17 +45,20 @@ jobs:
         run: |
           set -e
           mkdir -p "$XBPS_CACHE_DIR/target" "$XBPS_CACHE_DIR/host"
-          # El cachedir por defecto vive junto al builder; se enlaza al workspace para que la cache persista
-          ln -sfn "$XBPS_CACHE_DIR/target" live-maker/xbps-cachedir-x86_64-musl
-          ln -sfn "$XBPS_CACHE_DIR/host" live-maker/xbps-cachedir-x86_64
+          # ponytail: el build va en docker run y no en `container:` porque las
+          # acciones JS del runner (checkout, cache) necesitan libstdc++ dentro
+          # del contenedor, y la imagen de Void glibc no lo trae.
           docker run --rm --privileged \
             -e BOOTLOADER="${{ inputs.bootloader }}" \
             -v /dev:/dev -v "$GITHUB_WORKSPACE:/workspace" -w /workspace/live-maker \
             ghcr.io/void-linux/void-glibc:20261001R1 sh -c '
               set -e
               export LANG=C.UTF-8
+              # El cachedir por defecto vive junto al builder; se enlaza al workspace para que la cache persista
+              ln -sfn /workspace/.cache/xbps/target xbps-cachedir-x86_64-musl
+              ln -sfn /workspace/.cache/xbps/host xbps-cachedir-x86_64
               xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
-              xbps-install -y --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3
+              xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/ bash coreutils sed tar gzip xz zstd gawk grep findutils diffutils util-linux e2fsprogs dosfstools kmod squashfs-tools shadow git sudo curl wget file python3
               groupadd -g 1000 anon || true
               useradd -m -u 1000 -g anon -s /bin/bash anon || true
               echo "anon ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/anon
