@@ -10,8 +10,11 @@ interface_branding: @@ISO_TITLE@@
 interface_branding_colour: 00aaaa
 interface_help_colour: 00aa00
 
-wallpaper: boot():/boot/splash.png
-wallpaper_style: centered
+# Wallpaper a 1920x1080 (el splash 640x480 centrado sobre su propio color de
+# fondo). "stretched" lo escala a la resolucion de la pantalla; como el PNG ya
+# es 16:9 no deforma el logo.
+wallpaper: boot():/boot/wallpaper.png
+wallpaper_style: stretched
 
 ${KERNEL}=boot():/boot/@@KERNEL_IMG@@
 ${INITRD}=boot():/boot/initrd

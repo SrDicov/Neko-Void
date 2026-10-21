@@ -530,6 +530,7 @@ FONTS="
     liberation-fonts-ttf
     font-misc-misc
     terminus-font
+    font-cozette
 "
 
 # ─────────────────────────────────────────────

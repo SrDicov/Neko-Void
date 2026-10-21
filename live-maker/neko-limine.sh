@@ -160,8 +160,8 @@ cp -f "$LIMINE_DATADIR/BOOTX64.EFI" "$IMAGEDIR/EFI/BOOT/BOOTX64.EFI"
 [ -f "$LIMINE_DATADIR/BOOTIA32.EFI" ] && cp -f "$LIMINE_DATADIR/BOOTIA32.EFI" "$IMAGEDIR/EFI/BOOT/"
 [ -f "$LIMINE_DATADIR/BOOTAA64.EFI" ] && cp -f "$LIMINE_DATADIR/BOOTAA64.EFI" "$IMAGEDIR/EFI/BOOT/"
 
-# El splash que usa GRUB/isolinux como wallpaper del menú de Limine.
-[ -f data/splash.png ] && cp -f data/splash.png "$IMAGEDIR/boot/splash.png"
+# Wallpaper del menu de Limine: el splash del tema, reescalado a 16:9.
+[ -f data/wallpaper.png ] && cp -f data/wallpaper.png "$IMAGEDIR/boot/wallpaper.png"
 
 # Shell UEFI (tecla U en el menú de Limine): permite arrancar a mano Windows
 # u otro SO desde la ESP. Opcional: si el paquete no está, se sigue sin él.
