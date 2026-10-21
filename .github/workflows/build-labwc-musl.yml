@@ -77,8 +77,9 @@ jobs:
               rm -f ./labwc/home/anon/.Xauthority ./labwc/home/anon/.ICEauthority
               su anon -c "cd /workspace/live-maker && bash neko-builder.sh labwc-musl -b $BOOTLOADER"
             '
-          # La cache la guarda el runner; necesita lectura para otros UIDs
-          chmod -R a+rwX "$XBPS_CACHE_DIR"
+          # La cache la guarda el runner; los .xbps son de root (los creo el
+          # container), asi que el runner no puede cambiarles los permisos.
+          chmod -R a+rwX "$XBPS_CACHE_DIR" 2>/dev/null || true
 
       - name: Generate checksums
         if: success()
