@@ -190,7 +190,7 @@ jobs:
               wget https://huggingface.co/datasets/arepaconcafe/untested-neko/resolve/main/xfce.tar
               tar -xf xfce.tar -C xfce/home/anon/
               tar -xf xfce.tar -C xfce/etc/skel/
-              chown -R anon:anon /workspace
+              chown -R anon:anon /workspace/live-maker
               su anon -c "bash neko-builder.sh xfce -b '$BOOT'"
               ;;
 
