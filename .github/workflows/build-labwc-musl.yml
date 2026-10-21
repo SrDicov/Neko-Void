@@ -48,7 +48,7 @@ jobs:
           # ponytail: el build va en docker run y no en `container:` porque las
           # acciones JS del runner (checkout, cache) necesitan libstdc++ dentro
           # del contenedor, y la imagen de Void glibc no lo trae.
-          docker run --rm --privileged \
+          docker run --rm --privileged --cap-add=FOWNER \
             -e BOOTLOADER="${{ inputs.bootloader }}" \
             -v /dev:/dev -v "$GITHUB_WORKSPACE:/workspace" -w /workspace/live-maker \
             ghcr.io/void-linux/void-glibc:20261001R1 sh -c '
