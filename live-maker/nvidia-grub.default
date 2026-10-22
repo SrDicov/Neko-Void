@@ -1,0 +1,7 @@
+# Defaults de GRUB para los flavors con NVIDIA.
+#
+# ponytail: antes se descargaba de HuggingFace (el fichero 'grub' del
+# dataset arepaconcafe/untested-neko) y ese dataset se limpio: la descarga
+# daba 404 y wget salia con codigo 8, tumbando el build. El contenido es el
+# mismo que escribe postsetup-nvidia.sh.
+GRUB_CMDLINE_LINUX_DEFAULT="nvidia_drm.modeset=1 rd.driver.blacklist=nouveau modprobe.blacklist=nouveau"
