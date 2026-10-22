@@ -47,6 +47,11 @@ jobs:
       - name: Check coherence
         run: sh tools/check-coherence.sh
 
+      # El script del contenedor debe ser shell valido y no debe usar la forma
+      # fragile con comillas simples (que trunca el script en silencio).
+      - name: Check workflows
+        run: sh tools/check-workflows.sh
+
       - name: Build LabWC MUSL ISO
         run: |
           set -e
@@ -57,7 +62,7 @@ jobs:
           docker run --rm --privileged --cap-add=FOWNER \
             -e BOOTLOADER="${{ inputs.bootloader }}" \
             -v /dev:/dev -v "$GITHUB_WORKSPACE:/workspace" -w /workspace/live-maker \
-            ghcr.io/void-linux/void-glibc:20261001R1 sh -c '
+            ghcr.io/void-linux/void-glibc:20261001R1 sh -s <<'EOS'
               set -e
               export LANG=C.UTF-8
               # El cachedir del target vive en el workspace para que la cache
@@ -108,7 +113,7 @@ jobs:
               # ahi los checksums y los trozos del split.
               chmod 777 /workspace/live-maker
               chmod 644 /workspace/live-maker/*.iso /workspace/live-maker/*.txt 2>/dev/null || true
-            '
+            EOS
           # La cache la guarda el runner; los .xbps son de root (los creo el
           # container), asi que el runner no puede cambiarles los permisos.
           chmod -R a+rwX "$XBPS_CACHE_DIR" 2>/dev/null || true
