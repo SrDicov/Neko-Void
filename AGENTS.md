@@ -28,7 +28,9 @@ ISO builder for Neko-Void Linux (Void-based live ISOs). No app code, no tests/li
 - Root `README.md` build examples (`mate`/`matelibre` only) are partial; workflow matrix is the full list.
 - The void-mklive image ships xbps 0.59.1, which CANNOT read Void's current (flat) repo index → every CI build failed at repo sync. Fixed by using `ghcr.io/void-linux/void-glibc:20261001R1` (monthly Void glibc image, xbps 0.60.7) + installing the host tools mklive needs (util-linux, e2fsprogs, dosfstools, shadow...). Local builds on the old image need the same xbps upgrade by hand.
 - CI builds run via `docker run` (not `container:`): the JS actions of the runner need libstdc++ inside the container, and the Void glibc image has none. The xbps cache dir must stay owned by root inside the container, or xbps fails with EPERM changing the .xbps permissions.
-- `live-maker/xbps-install-musl.sh` is the `XBPS_INSTALL_CMD` wrapper: xbps >= 0.60 ignores `XBPS_ARCH` when `-r` is used, so the musl target resolved nothing ("not found in repository pool"). The wrapper turns `-r` into `XBPS_ROOT`.
+- `live-maker/xbps-install-musl.sh` is the `XBPS_INSTALL_CMD` wrapper: xbps >= 0.60 ignores `XBPS_ARCH` when `-r` is used, so the musl target resolved nothing ("not found in repository pool"). The wrapper turns `-r` into `XBPS_ROOT`. It also drops the musl/aarch64 repos when the arch is not musl (mklive.sh:554 adds them always; a musl repo has no `x86_64-repodata`, so xbps fails the reposync).
+- The CI MUST create the cachedir dirs before the symlinks (`mkdir -p /workspace/.cache/xbps/{target,host}`): with a cold cache the symlink dangles and xbps dies with `[trans] failed to change dir to cachedir ... No such file or directory` → "Failed to install required software".
+- The glibc repo list must NOT contain musl repos (a musl repo has no `x86_64-repodata`; xbps aborts the whole sync). `tools/check-coherence.sh` watches that.
 
 ## CI / Artifacts
 - GitHub `build-iso.yml`: manual dispatch only (`iso` choice + optional SourceForge upload), uploads to `arepaconcafe/untested-neko` HF dataset. GitLab `ci/build-{mate,xfce}.yml`: mate/xfce triggers.
