@@ -893,3 +893,31 @@ bash live-maker/neko-builder.sh --help | grep ryoku
 
 Si todo eso sale limpio y el build produce una ISO que arranca en el
 compositor con el shell de Ryoku, la imagen está lista.
+
+## 15. Lo que la ISO corrige por su cuenta
+
+Ryoku se instala como paquetes firmados, así que la ISO no copia su código.
+Hay dos excepciones, y las dos viven en `live-maker/ryoku-common/`, el
+`overlay2` que comparten los flavors `ryoku-n` y `ryoku-h`:
+
+- `usr/bin/ryoku-qylock-activate` (y su copia en `usr/sbin`): acota con
+  `flock -w` los cerrojos del qylock y el drenaje de clientes del lockscreen.
+  Sin eso, un `ryoku-shell` que arranca a la vez que el cutover del lockscreen
+  se queda esperando un cerrojo que otro tiene, y el daemon no llega a
+  arrancar.
+- `usr/lib/ryoku/runit/user/ryoku-shell/{run,finish}`: el `run` espera a que
+  termine el cutover de sesión antes de activar el qylock, y acota la
+  activación; el `finish` acota con `timeout` sus dos llamadas. runsv no tiene
+  orden de arranque, y turnstile lanza el shell en paralelo con
+  `session-start`: ese `finish` sin plazo se quedaba colgado 27 minutos
+  esperando a que alguien desbloqueara la pantalla.
+
+Los ficheros son copias de `ryoku-void` con el arreglo aplicado (rama
+`agent/qylock-deadlock`). Cuando esos cambios entren en el paquete publicado,
+el overlay se borra.
+
+El resto es selección de paquetes: `voxtype` y `ryoku-palette-bridge` están en
+el set porque el escritorio instala un servicio de sesión para cada uno y, sin
+el binario, su `run` hace `require_bin` y queda en `down`. Y `adduser.sh` copia
+`/etc/skel` cuando el home ya venía del overlay: sin `.bashrc`, bash abre sin
+prompt (`bash-5.3$`).
