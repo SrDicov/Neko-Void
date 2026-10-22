@@ -70,10 +70,10 @@ Las **claves** que los firman (una por repo):
 
 ## 1. El mapa mental: las cuatro capas
 
-El `live-maker/` es un **andamiaje**: un `case` de bash de 100 líneas que hace
-19 imágenes distintas. Para no repetir la política en tres sitios (el bash, el
-YAML del CI y los overlays), se separó en cuatro capas. Si entiendes esto,
-todo lo demás cae solo.
+El `live-maker/` es un **andamiaje** que produce **21 imágenes** distintas
+desde datos: la política vivía en un `case` de bash de 100 líneas repetido en
+el YAML del CI, y hoy está en cuatro capas. Si entiendes esto, todo lo demás
+cae solo.
 
 ```
 CAPA 4  CI            .github/workflows/build-iso.yml      cómo se invoca y dónde se publica
@@ -617,8 +617,7 @@ matrix:
   iso: ${{ fromJson(inputs.iso == 'all' && '["i3","icewm",…,"ryoku-n","ryoku-h",…]' || format('["{0}"]', inputs.iso)) }}
 ```
 
-Añade `"ryoku-n"` y `"ryoku-h"` a esa lista (ordenados como los demás, entre
-`"niri"` y `"swayfx"`).
+Añade `"ryoku-n"` y `"ryoku-h"` a esa lista (va en orden alfabético).
 
 **Los pasos especiales por flavor** (los que el workflow hace "si este flavor es
 este") son solo tres: el `.tar` extra de xfce, los módulos dracut de los
@@ -657,9 +656,18 @@ Si te dice que un flavor no está en la matriz del CI, es que falta el paso 5 �
 El workflow es de dispatch manual:
 
 ```bash
-gh workflow run build-iso.yml --repo Neko-Void-Linux/Neko-Void \
-  -f iso=ryoku-n -f bootloader=grub
+gh workflow run build-iso.yml --repo SrDicov/Neko-Void \
+  --ref main -f iso=ryoku-n -f bootloader=limine
 ```
+
+> **El `--repo` es el fork.** Los flavors `ryoku-*` no están en el upstream
+> (`Neko-Void-Linux/Neko-Void`): solo existen en el fork, así que un dispatch
+> contra el upstream construye la imagen sin Ryoku o falla.
+>
+> **El `--ref` es la rama que quieres construir.** Sin `--ref`, el dispatch usa
+> la rama por defecto (`main`): si tus commits están en otra rama, el CI
+> construye el código viejo sin avisar. Pasó y el build murió en "Enabling
+> services" con un `services=` que `main` todavía no tenía.
 
 | Entrada | Valores |
 |---|---|
@@ -759,15 +767,13 @@ ignora los ficheros de `/var/db/xbps/keys/` que no se llamen
 
 El mismo sintoma aparece si la clave esta bien pero **la importacion
 interactiva falla** ("Failed to import pubkey ... Resource temporarily
-unavailable"): entonces el build no tiene la clave en el keyring del contenedor
-y no puede verificar lo que descarga. Se arregla sembrando las claves del
-overlay en el keyring del contenedor antes de construir (§5.4).
-
-El mismo sintoma aparece si la clave esta bien pero **la importacion
-interactiva falla** ("Failed to import pubkey ... Resource temporarily
-unavailable"): entonces el build no tiene la clave en el keyring del contenedor
-y no puede verificar lo que descarga. Se arregla sembrando las claves del
-overlay en el keyring del contenedor antes de construir (§5.4).
+unavailable"): entonces xbps no tiene la clave en el keyring que usa. Con `-r
+<root>` (y el wrapper exportando `XBPS_ROOT`) ese keyring es el del **target**,
+no el del contenedor: mklive copia `live-maker/keys/*.plist` a cada rootfs
+antes de sincronizar (`mklive.sh:118`) y el wrapper siembra ademas las claves
+del overlay (`NEKO_TRUST_KEYS`). Si la clave solo esta en el overlay, un build
+que llame a mklive sin pasar por el wrapper vuelve a fallar: por eso las claves
+de los repos de la imagen van tambien en `live-maker/keys/` (§5.4).
 
 ### 11.4 `[reposync] failed to fetch ... Not Found` y el build entero cae
 
