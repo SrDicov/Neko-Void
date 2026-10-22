@@ -38,6 +38,19 @@ for wf in "$WORKFLOWS"/*.yml; do
 		continue
 	fi
 
+	# 1b) si el script va por heredoc, el docker run necesita -i (stdin).
+	#     Sin -i, sh -s lee un script vacio: el contenedor sale con 0 y el
+	#     build 'pasa' sin generar la ISO.
+	if grep -q "<<'EOS'" "$wf"; then
+		grep -E '^[[:space:]]*docker run' "$wf" | grep -qv -- '-i' &&
+			{
+				echo "ERROR: $name: el script del contenedor va por heredoc pero el" >&2
+				echo "       'docker run' no tiene -i: sh -s leeria un script vacio." >&2
+				errors=$((errors + 1))
+				continue
+			}
+	fi
+
 	# 2) heredocs bien cerrados y cuerpo del bloque con shell valido
 	rm -f "$tmp/body"
 	awk -v out="$tmp" -v wf="$name" '

@@ -59,7 +59,10 @@ jobs:
           # ponytail: el build va en docker run y no en `container:` porque las
           # acciones JS del runner (checkout, cache) necesitan libstdc++ dentro
           # del contenedor, y la imagen de Void glibc no lo trae.
-          docker run --rm --privileged --cap-add=FOWNER \
+          # ponytail: -i es obligatorio: el script del contenedor va por stdin
+          # (heredoc). Sin -i, docker cierra stdin, sh -s lee un script
+          # vacio, el contenedor sale con 0 y el build 'pasa' sin ISO.
+          docker run --rm --privileged --cap-add=FOWNER -i \
             -e BOOTLOADER="${{ inputs.bootloader }}" \
             -v /dev:/dev -v "$GITHUB_WORKSPACE:/workspace" -w /workspace/live-maker \
             ghcr.io/void-linux/void-glibc:20261001R1 sh -s <<'EOS'
