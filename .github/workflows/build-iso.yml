@@ -108,6 +108,10 @@ jobs:
           # El cachedir vive en el workspace para que la cache persista.
           # Target y host comparten cache: los .xbps llevan la arch en el
           # nombre, asi que no colisionan.
+          # ponytail: los mkdir no son opcionales: con la cache fria el
+          # symlink queda colgando y xbps aborta con "[trans] failed to
+          # change dir to cachedir ... No such file or directory".
+          mkdir -p /workspace/.cache/xbps/target /workspace/.cache/xbps/host
           ln -sfn /workspace/.cache/xbps/target xbps-cachedir-x86_64-musl
           ln -sfn /workspace/.cache/xbps/host xbps-cachedir-x86_64
           xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/
