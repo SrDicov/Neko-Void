@@ -129,15 +129,21 @@ if ! diff -u "$tmp/flavors" "$tmp/matrix" >"$tmp/matrix.diff" 2>&1; then
 fi
 
 # ── 6. Las ramas del case del workflow tienen que ser flavors ───────────
-for branch in $(grep -oE '^            [a-z0-9*_|-]+\)$' "$WORKFLOWS/build-iso.yml" |
-	tr -d ')' | tr '|' ' '); do
-	for one in $branch; do
+# Solo el case de "$DESKTOP": otros cases (p.ej. por arch) no son flavors.
+awk '
+	/case "\$DESKTOP" in/ { inc = 1; next }
+	inc && /^          esac/ { inc = 0 }
+	inc && /^            [a-z0-9*_|-]+\)$/ { print }
+' "$WORKFLOWS/build-iso.yml" >"$tmp/branches"
+while read -r branch; do
+	[ -n "$branch" ] || continue
+	for one in $(echo "$branch" | tr -d ')' | tr '|' ' '); do
 		one="$(echo "$one" | tr -d '*')"
 		[ -n "$one" ] || continue
 		grep -qx "$one" "$tmp/flavors" ||
 			err "el workflow tiene una rama para '$one' que no es un flavor"
 	done
-done
+done <"$tmp/branches"
 
 # ── 7. Las rutas de overlay que citan los workflows tienen que existir ───
 grep -hoE '[a-z0-9_-]+/(etc|home|usr|var)/' "$WORKFLOWS"/*.yml 2>/dev/null |
