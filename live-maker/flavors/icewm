@@ -1,0 +1,7 @@
+desc=IceWM + JWM (kernel LTS)
+overlay=icewm
+packages=PACKAGES_ICEWM
+kernel=linux-lts
+dm=lightdm
+arch=x86_64
+iso=nekovoid-lts-icewm

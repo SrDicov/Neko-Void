@@ -1,0 +1,10 @@
+#%PAM-1.0
+# PAM service para el autologin de LightDM (live ISO).
+# Fuente unica: la copian los workflows a los flavors con lightdm.
+# ponytail: pam_permit porque el live entra sin contrasena; un flavor con
+# su propia variante (xfce) la trae en su overlay y esta no la pisa.
+auth required pam_env.so
+auth required pam_permit.so
+account include system-login
+password include system-login
+session include system-login

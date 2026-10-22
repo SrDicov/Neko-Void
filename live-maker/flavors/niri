@@ -1,0 +1,7 @@
+desc=Niri (kernel mainline)
+overlay=niri
+packages=PACKAGES_NIRI
+kernel=linux-mainline
+dm=emptty
+arch=x86_64
+iso=nekovoid-niri

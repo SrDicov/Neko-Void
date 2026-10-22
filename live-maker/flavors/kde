@@ -1,0 +1,7 @@
+desc=KDE Plasma (kernel mainline)
+overlay=kdedir
+packages=PACKAGES_KDE
+kernel=linux-mainline
+dm=sddm tlp-pd
+arch=x86_64
+iso=nekovoid-kde

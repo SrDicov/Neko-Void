@@ -1,0 +1,7 @@
+desc=MATE + Xlibre (kernel mainline)
+overlay=mate
+packages=PACKAGES_XLIBRE
+kernel=linux-mainline
+dm=lightdm
+arch=x86_64
+iso=nekovoid-matelibre

@@ -1,0 +1,7 @@
+desc=XFCE musl (x86_64-musl)
+overlay=musl
+packages=PACKAGES_MUSL
+kernel=linux-mainline
+dm=lightdm
+arch=x86_64-musl
+iso=nekovoid-musl

@@ -1,0 +1,8 @@
+desc=KDE + NVIDIA (kernel 6.18, drivers por postsetup)
+overlay=kdedir
+packages=PACKAGES_KDE
+kernel=linux6.18
+dm=sddm
+arch=x86_64
+iso=nekovoid-nvidia-kde
+postsetup=./postsetup-nvidia.sh

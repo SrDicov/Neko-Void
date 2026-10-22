@@ -1,0 +1,8 @@
+desc=Niri + NVIDIA (kernel mainline, drivers por postsetup)
+overlay=niri
+packages=PACKAGES_NIRI
+kernel=linux-mainline
+dm=emptty
+arch=x86_64
+iso=nekovoid-nvidia
+postsetup=./postsetup-nvidia.sh

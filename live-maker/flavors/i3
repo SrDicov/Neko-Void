@@ -1,0 +1,7 @@
+desc=i3 (kernel mainline)
+overlay=i3
+packages=PACKAGES_I3
+kernel=linux-mainline
+dm=lightdm
+arch=x86_64
+iso=nekovoid-i3

@@ -1,0 +1,7 @@
+desc=LXQt (kernel mainline)
+overlay=lxqt
+packages=PACKAGES_LXQT
+kernel=linux-mainline
+dm=lightdm
+arch=x86_64
+iso=nekovoid-lxqt

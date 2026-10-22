@@ -1,0 +1,4 @@
+desc=Niri + NVIDIA 580
+base=niri
+iso=nekovoid-niri-nvidia
+extra=nvidia linux-headers nvidia-libs-32bit

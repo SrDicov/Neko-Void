@@ -1,0 +1,4 @@
+desc=KDE + NVIDIA 580
+base=kde
+iso=nekovoid-kde-nvidia
+extra=nvidia linux-headers nvidia-libs-32bit

@@ -1,0 +1,7 @@
+desc=MATE + Xorg (kernel mainline)
+overlay=mate
+packages=PACKAGES_XORG
+kernel=linux-mainline
+dm=lightdm
+arch=x86_64
+iso=nekovoid-mate

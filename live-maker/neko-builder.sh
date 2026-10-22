@@ -44,6 +44,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
 . ./base-neko-pkgs.sh
+# Politica de cada flavor: los manifests de flavors/ (overlay, kernel, DM,
+# nombre de ISO, paquetes extra). El builder, el --help y el CI leen aqui.
+FLAVOR_DIR="$SCRIPT_DIR/flavors"
+. ./flavor.sh
 
 # ─────────────────────────────────────────────
 # Servicios base (el display manager se agrega
@@ -67,28 +71,22 @@ usage() {
     cat <<EOF
 ${BOLD}NekoVoid Live ISO Builder${RESET}
 
-Uso: $(basename "$0") [ESCRITORIO] [OPCIONES]
+Uso: $(basename "$0") [FLAVOR] [OPCIONES]
       $(basename "$0")                          ${CYAN}# Modo interactivo${RESET}
 
-Escritorios disponibles:
-  ${GREEN}mate${RESET}    MATE + Xorg (kernel mainline)
-  ${GREEN}matelibre${RESET}   MATE + Xlibre (kernel mainline, sólo libre)
-  ${GREEN}kde${RESET}        KDE Plasma (kernel mainline)
-  ${GREEN}lxqt${RESET}       LXQt (kernel mainline)
-  ${GREEN}xfce${RESET}       XFCE (kernel mainline)
-  ${GREEN}icejwm${RESET}     IceWM + JWM (kernel LTS)
-  ${GREEN}niri${RESET}     Niri (kernel Stable)
-  ${GREEN}nvidia${RESET}   Niri + NVIDIA (kernel 6.18, drivers via postsetup)
-  ${GREEN}nvidia-kde${RESET}   KDE + NVIDIA (kernel 6.18, drivers via postsetup)
-  ${GREEN}cinnamon${RESET}   Cinnamon (kernel mainline)
-  ${GREEN}labwc${RESET}   Labwc (kernel LTS)
-  ${GREEN}labwc-musl${RESET} Labwc musl + Noctalia (x86_64-musl)
-  ${GREEN}lxde${RESET}       LXDE (kernel mainline)
-  ${GREEN}i3${RESET}       I3 (kernel mainline)
+Flavors disponibles:
+EOF
+    local f name desc
+    for f in flavors/*; do
+        [ -f "$f" ] || continue
+        name="$(basename "$f")"
+        desc="$(flavor_get "$name" desc)"
+        printf "  ${GREEN}%-14s${RESET} %s\n" "$name" "$desc"
+    done
+    cat <<EOF
 
 Especiales:
-  ${GREEN}doble${RESET}       Construir xlibre + xorg (ambos)
-  ${GREEN}doble-isor${RESET}  Construir rollibre + rolling (ambos)
+  ${GREEN}doble${RESET}       Construye matelibre + mate (Xlibre y Xorg)
 
 Opciones:
   -e, --extra "pkg1 pkg2"   Agregar paquetes extra a la ISO
@@ -100,10 +98,9 @@ Opciones:
 
 Ejemplos:
   $(basename "$0")                        # Menú interactivo
-  $(basename "$0") icejwm                 # Construir IceWM directamente
+  $(basename "$0") icewm                  # Construir IceWM directamente
   $(basename "$0") kde -e "gimp inkscape" # KDE + paquetes extra
   $(basename "$0") labwc -b limine        # Labwc con Limine (BIOS+UEFI)
-  $(basename "$0") doble                  # Construir ambos (libre + nonfree)
 EOF
 }
 
@@ -119,165 +116,55 @@ build_iso() {
     local desktop="$1"
     local extra_pkgs="${2:-}"
 
-    local pkg_var=""
-    local includedir=""
-    local includedir2=""
-    local kernel_kver=""
-    local dm_service=""
-    local iso_name=""
-    local arch=""
-    local postsetup=""
-    # ─── Mapeo de escritorio → configuración ───
-    case "$desktop" in
-        mate)
-            pkg_var="PACKAGES_XORG"
-            includedir="./mate"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="lightdm"
-            iso_name="nekovoid-mate-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        matelibre)
-            pkg_var="PACKAGES_XLIBRE"
-            includedir="./mate"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="lightdm"
-            iso_name="nekovoid-matelibre-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        kde)
-            pkg_var="PACKAGES_KDE"
-            includedir="./kdedir"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="sddm tlp-pd"
-            iso_name="nekovoid-kde-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        lxqt)
-            pkg_var="PACKAGES_LXQT"
-            includedir="./lxqt"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="lightdm"
-            iso_name="nekovoid-lxqt-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        i3)
-            pkg_var="PACKAGES_I3"
-            includedir="./i3"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="lightdm"
-            iso_name="nekovoid-i3-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        xfce)
-            pkg_var="PACKAGES_XFCE"
-            includedir="./xfce"
-            kernel_kver="linux-lts"
-            dm_service="lightdm"
-            iso_name="nekovoid-xfce-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        icewm)
-            pkg_var="PACKAGES_ICEWM"
-            includedir="./icewm"
-            kernel_kver="linux-lts"
-            dm_service="lightdm"
-            iso_name="nekovoid-lts-icewm-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        jwm)
-            pkg_var="PACKAGES_JWM"
-            includedir="./jwm"
-            kernel_kver="linux-lts"
-            dm_service="lightdm"
-            iso_name="nekovoid-lts-jwm-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        cinnamon)
-            pkg_var="PACKAGES_CINNAMON"
-            includedir="./cinnamon"
-            kernel_kver="linux-lts"
-            dm_service="lightdm"
-            iso_name="nekovoid-cinnamon-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        labwc)
-            pkg_var="PACKAGES_LABWC"
-            includedir="./labwc"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="emptty"
-            iso_name="nekovoid-labwc-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        labwc-musl)
-            pkg_var="PACKAGES_MUSL_LABWC"
-            includedir="./labwc"
-            includedir2="./labwc-musl"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="emptty"
-            iso_name="nekovoid-labwc-musl-$VERSION.iso"
-            arch="x86_64-musl"
-            ;;
-        niri)
-            pkg_var="PACKAGES_NIRI"
-            includedir="./niri"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="emptty"
-            iso_name="nekovoid-niri-$VERSION.iso"
-            arch="x86_64"
-            ;;
-        musl)
-            pkg_var="PACKAGES_MUSL"
-            includedir="./musl"
-            kernel_kver="$KERNEL_DEFAULT"
-            dm_service="lightdm"
-            iso_name="nekovoid-musl-$VERSION.iso"
-            arch="x86_64-musl"
-            ;;
-        nvidia)
-            pkg_var="PACKAGES_NIRI"
-            includedir="./niri"
-            kernel_kver="linux-mainline"
-            dm_service="emptty"
-            iso_name="nekovoid-nvidia-$VERSION.iso"
-            arch="x86_64"
-            postsetup="./postsetup-nvidia.sh"
-            ;;
-         nvidia-kde)
-            pkg_var="PACKAGES_KDE"
-            includedir="./kdedir"
-            kernel_kver="linux6.18"
-            dm_service="sddm"
-            iso_name="nekovoid-nvidia-kde-$VERSION.iso"
-            arch="x86_64"
-            postsetup="./postsetup-nvidia.sh"
-            ;;
-        *)
-            echo -e "${BOLD}Error:${RESET} Escritorio desconocido '${desktop}'"
-            echo "Usa --help para ver los escritorios disponibles."
-            exit 1
-            ;;
-    esac
+    # ─── Politica del flavor: todo sale de flavors/<nombre> ───
+    if [ ! -f "flavors/$desktop" ]; then
+        echo -e "${BOLD}Error:${RESET} Flavor desconocido '${desktop}'"
+        echo "Usa --help para ver los flavors disponibles."
+        exit 1
+    fi
 
-    # ─── Obtener lista de paquetes (indirect reference) ───
-    local packages="${!pkg_var}"
+    local desc overlay overlay2 packages kernel dm arch iso_prefix postsetup
+    desc="$(flavor_get "$desktop" desc)"
+    overlay="$(flavor_get "$desktop" overlay)"
+    overlay2="$(flavor_get "$desktop" overlay2)"
+    packages="$(flavor_get "$desktop" packages)"
+    kernel="$(flavor_get "$desktop" kernel)"
+    dm="$(flavor_get "$desktop" dm)"
+    arch="$(flavor_get "$desktop" arch)"
+    iso_prefix="$(flavor_get "$desktop" iso)"
+    postsetup="$(flavor_get "$desktop" postsetup)"
 
-    # ─── Agregar paquetes extra ───
+    if [ -z "$packages" ]; then
+        echo -e "${BOLD}Error:${RESET} flavors/$desktop no define 'packages'"
+        exit 1
+    fi
+
+    # El manifest da el NOMBRE del set de paquetes; aqui se expande.
+    local pkg_list="${!packages}"
+    # extra= del manifest (variantes nvidia) + extra de la linea de comandos.
+    local manifest_extra="$(flavor_get "$desktop" extra)"
+    if [ -n "$manifest_extra" ]; then
+        pkg_list="$pkg_list $manifest_extra"
+    fi
     if [ -n "$extra_pkgs" ]; then
-        packages="$packages $extra_pkgs"
+        pkg_list="$pkg_list $extra_pkgs"
+    fi
+    # Los flavors con postsetup de NVIDIA necesitan las cabeceras del kernel.
+    if [ -n "$postsetup" ]; then
+        pkg_list="$pkg_list linux6.18-headers"
     fi
 
-    # ─── Paquetes específicos por build ───
-    if [ -n "$postsetup" ]; then
-        packages="$packages linux6.18-headers"
-    fi
+    local includedir="./$overlay"
+    local includedir2=""
+    [ -n "$overlay2" ] && includedir2="./$overlay2"
+    local iso_name="${iso_prefix}-${VERSION}.iso"
 
     # ─── Bootloader Limine: ISO propia + paquete limine dentro del live ───
     # (el paquete sirve para instalar Limine a mano en el disco y encadenar
     #  Windows/Linux: `limine bios-install /dev/sdX`)
     if [ "$BOOTLOADER" = limine ]; then
         iso_name="${iso_name%.iso}-limine.iso"
-        packages="$packages limine"
+        pkg_list="$pkg_list limine"
     fi
 
     # ─── Banner informativo ───
@@ -286,20 +173,18 @@ build_iso() {
     echo "  NekoVoid Live ISO Builder (Nonfree)"
     echo "============================================="
     echo ""
-    echo "  Escritorio:      ${desktop}"
+    echo "  Flavor:          ${desktop} (${desc})"
     echo "  ISO de salida:   ${iso_name}"
     echo "  Bootloader:      ${BOOTLOADER}"
-    echo "  Paquetes total:  $(echo "${packages}" | wc -w)"
-    if [ -n "$kernel_kver" ]; then
-        echo "  Kernel:          ${kernel_kver}"
+    echo "  Paquetes total:  $(echo "${pkg_list}" | wc -w)"
+    if [ -n "$kernel" ]; then
+        echo "  Kernel:          ${kernel}"
     else
         echo "  Kernel:          (por defecto)"
     fi
     if [ -n "$extra_pkgs" ]; then
         echo "  Paquetes extra:  ${extra_pkgs}"
     fi
-    echo ""
-    echo "============================================="
     echo ""
 
     # ─── Construir comando ───
@@ -326,7 +211,7 @@ build_iso() {
     cmd_args+=(
         -o "$iso_name"
         -T "$ISO_TITLE"
-        -p "$packages"
+        -p "$pkg_list"
     )
 
     if [ -n "$postsetup" ]; then
@@ -336,15 +221,15 @@ build_iso() {
         fi
     fi
 
-    if [ -n "$kernel_kver" ]; then
-        cmd_args+=(-v "$kernel_kver")
+    if [ -n "$kernel" ]; then
+        cmd_args+=(-v "$kernel")
     fi
 
     if [ -n "$postsetup" ]; then
         cmd_args+=(-x "$postsetup")
     fi
 
-    cmd_args+=(-S "$SERVICES_BASE $dm_service")
+    cmd_args+=(-S "$SERVICES_BASE $dm")
 
     # ponytail: repos glibc y musl no se mezclan. musl usa repo-ci (mirror de CI
     # upstream, consistente) + z-repo-musl. El repo de sourceforge queda fuera:
@@ -394,51 +279,34 @@ interactive_menu() {
     echo -e "${BOLD}  NekoVoid Live ISO Builder – Interactivo${RESET}"
     echo -e "${BOLD}=============================================${RESET}"
     echo ""
-    echo -e "  ${CYAN}Escritorios disponibles:${RESET}"
-    echo ""
-    echo -e "  ${GREEN} 1)${RESET} xorg      ${YELLOW}→${RESET} MATE + Xorg (kernel estable)"
-    echo -e "  ${GREEN} 2)${RESET} xlibre    ${YELLOW}→${RESET} MATE + Xlibre (kernel estable, libre)"
-    echo -e "  ${GREEN} 3)${RESET} rolling   ${YELLOW}→${RESET} MATE + Xorg (kernel mainline)"
-    echo -e "  ${GREEN} 4)${RESET} rollibre  ${YELLOW}→${RESET} MATE + Xlibre (kernel mainline, libre)"
-    echo -e "  ${GREEN} 5)${RESET} kde       ${YELLOW}→${RESET} KDE Plasma (kernel mainline)"
-    echo -e "  ${GREEN} 6)${RESET} lxqt      ${YELLOW}→${RESET} LXQt (kernel mainline)"
-    echo -e "  ${GREEN} 7)${RESET} xfce      ${YELLOW}→${RESET} XFCE (kernel mainline)"
-    echo -e "  ${GREEN} 8)${RESET} icejwm    ${YELLOW}→${RESET} IceWM + JWM (kernel LTS)"
-    echo -e "  ${GREEN} 9)${RESET} cinnamon  ${YELLOW}→${RESET} Cinnamon (kernel mainline)"
-    echo -e "  ${GREEN}10)${RESET} lxde      ${YELLOW}→${RESET} LXDE (kernel mainline)"
-    echo -e "  ${GREEN}11)${RESET} labwc     ${YELLOW}→${RESET} labwc (kernel LTS)"
-    echo -e "  ${GREEN}12)${RESET} i3        ${YELLOW}→${RESET} I3 (kernel mainline)"
-    echo -e "  ${GREEN}13)${RESET} nvidia    ${YELLOW}→${RESET} Niri + NVIDIA (kernel 6.18, postsetup)"
+    echo -e "  ${CYAN}Flavors disponibles:${RESET}"
     echo ""
 
+    # La lista sale de flavors/: no puede desincronizarse con el builder.
+    local -a flavor_list=()
+    local f name total=0
+    for f in flavors/*; do
+        [ -f "$f" ] || continue
+        name="$(basename "$f")"
+        total=$((total + 1))
+        flavor_list+=("$name")
+        echo -e "  ${GREEN}$total)${RESET} ${name}  ${YELLOW}→${RESET} $(flavor_get "$name" desc)"
+    done
+
+    echo ""
     local choice
-    read -r -p "  Selecciona escritorio [1-10]: " choice
+    read -r -p "  Selecciona flavor [1-$total]: " choice
 
-    local desktop
-    case "$choice" in
-        1)  desktop="xorg" ;;
-        2)  desktop="xlibre" ;;
-        3)  desktop="rolling" ;;
-        4)  desktop="rollibre" ;;
-        5)  desktop="kde" ;;
-        6)  desktop="lxqt" ;;
-        7)  desktop="xfce" ;;
-        8)  desktop="icejwm" ;;
-        9)  desktop="cinnamon" ;;
-        10) desktop="lxde" ;;
-        11) desktop="i3" ;;
-        12) desktop="labwc" ;;
-        13) desktop="nvidia" ;;
-        *)
-            echo -e "${BOLD}Error:${RESET} Opción inválida '$choice'. Usa un número del 1 al 10."
-            exit 1
-            ;;
-    esac
+    if ! printf '%s' "$choice" | grep -qE '^[0-9]+$' ||
+        [ "$choice" -lt 1 ] || [ "$choice" -gt "$total" ]; then
+        echo -e "${BOLD}Error:${RESET} Opción inválida '$choice'."
+        exit 1
+    fi
 
     echo ""
     read -r -p "  ¿Agregar paquetes extra? (nombres separados por espacio, Enter para omitir): " extra_pkgs
 
-    build_iso "$desktop" "$extra_pkgs"
+    build_iso "${flavor_list[$((choice - 1))]}" "$extra_pkgs"
 }
 
 # ─────────────────────────────────────────────
@@ -505,19 +373,13 @@ if [ -z "$DESKTOP" ]; then
     exit 0
 fi
 
-# ─── Despachar según el escritorio ───
+# ─── Despachar según el flavor ───
 case "$DESKTOP" in
     doble)
-        echo -e "${CYAN}→ Construyendo xlibre + xorg...${RESET}"
-        build_iso xlibre "$EXTRA_PKGS"
+        echo -e "${CYAN}→ Construyendo matelibre + mate...${RESET}"
+        build_iso matelibre "$EXTRA_PKGS"
         echo ""
-        build_iso xorg "$EXTRA_PKGS"
-        ;;
-    doble-isor)
-        echo -e "${CYAN}→ Construyendo rollibre + rolling...${RESET}"
-        build_iso rollibre "$EXTRA_PKGS"
-        echo ""
-        build_iso rolling "$EXTRA_PKGS"
+        build_iso mate "$EXTRA_PKGS"
         ;;
     *)
         build_iso "$DESKTOP" "$EXTRA_PKGS"

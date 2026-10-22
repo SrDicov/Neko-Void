@@ -1,0 +1,7 @@
+desc=XFCE (kernel LTS)
+overlay=xfce
+packages=PACKAGES_XFCE
+kernel=linux-lts
+dm=lightdm
+arch=x86_64
+iso=nekovoid-xfce

@@ -1,0 +1,4 @@
+desc=KDE + NVIDIA 580
+base=kde
+iso=nekovoid-nvidia580
+extra=nvidia580 linux-headers nvidia580-gtklibs nvidia580-libs nvidia580-libs-32bit nvidia580-dkms nvidia580-opencl

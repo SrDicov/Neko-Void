@@ -1,0 +1,7 @@
+desc=JWM (kernel LTS)
+overlay=jwm
+packages=PACKAGES_JWM
+kernel=linux-lts
+dm=lightdm
+arch=x86_64
+iso=nekovoid-lts-jwm

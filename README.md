@@ -41,11 +41,32 @@ Then, execute the builder script with your desired configuration:
 ## neko-builder.sh Usage Details
 The build script supports multiple options. For example:
  * ./neko-builder.sh - Runs in interactive mode.
- * ./neko-builder.sh <desktop> - Builds a specific desktop environment (e.g., mare, matelibre, kde).
- * ./neko-builder.sh <desktop> -e "pkg..." - Builds with extra specified packages.
- * ./neko-builder.sh <desktop> -b grub|limine - Chooses the ISO bootloader: `grub` (default, GRUB for UEFI + isolinux for BIOS) or `limine` (Limine for both BIOS and UEFI, with chainload entries for Windows/other Linux).
- * ./neko-builder.sh doble - Builds both Xlibre and Xorg ISOs.
- * ./neko-builder.sh doble-isor - Builds both Rollibre and Rolling ISOs.
+ * ./neko-builder.sh <flavor> - Builds a specific desktop environment (e.g., mate, matelibre, kde).
+ * ./neko-builder.sh <flavor> -e "pkg..." - Builds with extra specified packages.
+ * ./neko-builder.sh <flavor> -b grub|limine - Chooses the ISO bootloader: `grub` (default, GRUB for UEFI + isolinux for BIOS) or `limine` (Limine for both BIOS and UEFI, with chainload entries for Windows/other Linux).
+ * ./neko-builder.sh doble - Builds both the Xlibre (matelibre) and Xorg (mate) ISOs.
+
+### Flavors
+A flavor is a file in `live-maker/flavors/<name>` with `key=value` lines:
+
+```
+desc=MATE + Xorg (kernel mainline)
+overlay=mate
+packages=PACKAGES_XORG
+kernel=linux-mainline
+dm=lightdm
+arch=x86_64
+iso=nekovoid-mate
+```
+
+The builder, the `--help` and the CI read the same manifest (`live-maker/flavor.sh`), so
+adding a flavor means adding one file. `base=<flavor>` inherits the missing keys.
+
+### Coherence check
+`sh tools/check-coherence.sh` verifies that the manifests, the builder, the `--help`
+and the CI matrix talk about the same flavors and that every referenced path exists.
+It runs in CI before the build.
+
 ## Related Projects and Resources
 You can find more information about the Neko ecosystem at these locations:
  * **Repo Builder:** https://github.com/Neko-Void-Linux/repo-neko

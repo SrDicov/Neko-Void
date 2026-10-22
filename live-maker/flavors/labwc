@@ -1,0 +1,7 @@
+desc=Labwc + Noctalia (kernel mainline)
+overlay=labwc
+packages=PACKAGES_LABWC
+kernel=linux-mainline
+dm=emptty
+arch=x86_64
+iso=nekovoid-labwc

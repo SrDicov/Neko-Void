@@ -1,0 +1,4 @@
+desc=KDE + NVIDIA 390
+base=kde
+iso=nekovoid-nvidia390
+extra=nvidia390 linux-headers nvidia390-gtklibs nvidia390-libs nvidia390-libs-32bit nvidia390-dkms nvidia390-opencl
