@@ -1,5 +1,6 @@
 desc=Ryoku sobre Hyprland (kernel mainline)
 overlay=ryoku-h
+overlay2=ryoku-common
 packages=PACKAGES_RYOKU_H
 kernel=linux-mainline
 dm=emptty

@@ -1,5 +1,6 @@
 desc=Ryoku sobre niri (kernel mainline)
 overlay=ryoku-n
+overlay2=ryoku-common
 packages=PACKAGES_RYOKU_N
 kernel=linux-mainline
 dm=emptty

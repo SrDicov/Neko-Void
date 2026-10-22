@@ -28,6 +28,11 @@ chroot ${NEWROOT} /bin/sh -c 'getent group nopasswdlogin || groupadd nopasswdlog
 chroot ${NEWROOT} useradd -m -c $USERNAME -G audio,video,wheel,nopasswdlogin -s $USERSHELL $USERNAME
 chroot ${NEWROOT} passwd -d $USERNAME >/dev/null 2>&1
 
+# The overlay can ship /home/$USERNAME already (Ryoku materializes its config
+# there), and useradd -m skips /etc/skel when the home exists: bash then opens
+# with no prompt. Seed only what is missing.
+chroot ${NEWROOT} sh -c "[ -e /home/$USERNAME/.bashrc ] || { cp -a /etc/skel/. /home/$USERNAME/ && chown -R $USERNAME: /home/$USERNAME; }"
+
 # Setup default root/user password (voidlinux).
 chroot ${NEWROOT} sh -c 'echo "root:voidlinux" | chpasswd -c SHA512'
 chroot ${NEWROOT} sh -c "echo "$USERNAME:voidlinux" | chpasswd -c SHA512"

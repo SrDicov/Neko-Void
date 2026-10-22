@@ -518,6 +518,10 @@ RYOKU_N="
 	ryoku-desktop-niri
 	ryoku-keysounds-niri
 	ryoku-rashin
+	# Servicios de sesion que el escritorio instala y espera: sin el binario
+	# su run queda en down. voxtype viene de Void; palette-bridge, de Ryoku.
+	voxtype
+	ryoku-palette-bridge
 	kitty
 	ryotunes
 	ryomanager
@@ -560,6 +564,10 @@ RYOKU_H="
 	ryoku-desktop
 	ryoku-desktop-hyprland
 	ryoku-rashin
+	# Servicios de sesion que el escritorio instala y espera: sin el binario
+	# su run queda en down. voxtype viene de Void; palette-bridge, de Ryoku.
+	voxtype
+	ryoku-palette-bridge
 	kitty
 	ryotunes
 	ryomanager
