@@ -119,6 +119,12 @@ jobs:
           # symlink queda colgando y xbps aborta con "[trans] failed to
           # change dir to cachedir ... No such file or directory".
           mkdir -p /workspace/.cache/xbps/target /workspace/.cache/xbps/host
+          # El indice cacheado de un repo puede quedarse viejo (xbps no lo
+          # resincroniza si el servidor responde 'not modified') y entonces un
+          # paquete que ya existe sale como "Package 'jq' not found in
+          # repository pool". Los .xbps (lo pesado, 1,8 GB) se conservan; solo
+          # se borran los indices, que son unos MB.
+          find /workspace/.cache/xbps -name '*repodata*' -delete 2>/dev/null || true
           ln -sfn /workspace/.cache/xbps/target xbps-cachedir-x86_64-musl
           ln -sfn /workspace/.cache/xbps/host xbps-cachedir-x86_64
           xbps-install -Syu --repository=https://repo-de.voidlinux.org/current/

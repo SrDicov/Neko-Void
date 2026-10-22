@@ -25,8 +25,16 @@ done
 [ -n "$root" ] && export XBPS_ROOT="$root"
 
 # Quita los repos de otra arch si el target no es musl.
-case "${XBPS_ARCH:-}" in
-    *-musl) ;;
+# ponytail: mklive usa las dos variables segun la llamada: install_packages
+# pone XBPS_ARCH (linea 159) pero la llamada -U de la linea 165 solo pone
+# XBPS_TARGET_ARCH. Hay que mirar las dos: si solo se mirase XBPS_ARCH, la
+# llamada -U creeria que el target es glibc, filtraria los repos musl y
+# 'jq' (o cualquier paquete solo-musl) saldría como "not found in repository
+# pool".
+_neko_arch="${XBPS_ARCH:-${XBPS_TARGET_ARCH:-}}"
+case "$_neko_arch" in
+    "") ;;   # arch desconocida: no filtrar (fail-safe, un repo de mas no rompe)
+    *-musl) ;;   # target musl: los repos musl hacen falta
     *)
         args=()
         skip=0
