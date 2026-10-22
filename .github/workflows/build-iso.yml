@@ -81,6 +81,18 @@ jobs:
       - name: Check coherence
         run: sh tools/check-coherence.sh
 
+      # Ratchet: shellcheck en los scripts de Neko (los de upstream no entran).
+      # Se baja a -S info cuando llegue a 0 avisos.
+      - name: Shellcheck
+        run: |
+          shellcheck -S warning \
+            live-maker/neko-builder.sh \
+            live-maker/neko-limine.sh \
+            live-maker/flavor.sh \
+            live-maker/xbps-install-musl.sh \
+            live-maker/postsetup-nvidia.sh \
+            tools/check-coherence.sh
+
       - name: Build Neko-Void ISO (${{ matrix.iso }})
         env:
           DESKTOP: ${{ matrix.iso }}

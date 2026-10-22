@@ -17,13 +17,12 @@ set -euo pipefail
 export LANG="${LANG:-C.UTF-8}"
 # ponytail: mklive usa xbps-install con -r, y xbps >= 0.60 ignora XBPS_ARCH
 # con -r: el target musl no resuelve sus paquetes. El wrapper pasa XBPS_ROOT.
-export XBPS_INSTALL_CMD="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/xbps-install-musl.sh"
+XBPS_INSTALL_CMD="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/xbps-install-musl.sh"
+export XBPS_INSTALL_CMD
 # Overlay temporal del instalador (lo crea build_iso); se borra al salir.
 INSTALL_OVERLAY=""
 cleanup() { [ -n "$INSTALL_OVERLAY" ] && rm -rf "$INSTALL_OVERLAY"; return 0; }
 trap cleanup EXIT
-KERNEL_DEFAULT="linux-mainline"
-KERNEL_STABLE="linux6.18"
 # ─────────────────────────────────────────────
 # Configuración de salida
 # ─────────────────────────────────────────────
@@ -46,7 +45,7 @@ cd "$SCRIPT_DIR"
 . ./base-neko-pkgs.sh
 # Politica de cada flavor: los manifests de flavors/ (overlay, kernel, DM,
 # nombre de ISO, paquetes extra). El builder, el --help y el CI leen aqui.
-FLAVOR_DIR="$SCRIPT_DIR/flavors"
+export FLAVOR_DIR="$SCRIPT_DIR/flavors"
 . ./flavor.sh
 
 # ─────────────────────────────────────────────
@@ -142,7 +141,8 @@ build_iso() {
     # El manifest da el NOMBRE del set de paquetes; aqui se expande.
     local pkg_list="${!packages}"
     # extra= del manifest (variantes nvidia) + extra de la linea de comandos.
-    local manifest_extra="$(flavor_get "$desktop" extra)"
+    local manifest_extra
+    manifest_extra="$(flavor_get "$desktop" extra)"
     if [ -n "$manifest_extra" ]; then
         pkg_list="$pkg_list $manifest_extra"
     fi

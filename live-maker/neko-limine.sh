@@ -21,7 +21,8 @@ set -euo pipefail
 export LANG="${LANG:-C.UTF-8}"
 # ponytail: mklive usa xbps-install con -r, y xbps >= 0.60 ignora XBPS_ARCH
 # con -r: el target musl no resuelve sus paquetes. El wrapper pasa XBPS_ROOT.
-export XBPS_INSTALL_CMD="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/xbps-install-musl.sh"
+XBPS_INSTALL_CMD="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/xbps-install-musl.sh"
+export XBPS_INSTALL_CMD
 
 cd "$(dirname "$(readlink -f "$0")")"
 
