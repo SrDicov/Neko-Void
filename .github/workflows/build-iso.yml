@@ -91,7 +91,14 @@ jobs:
             live-maker/flavor.sh \
             live-maker/xbps-install-musl.sh \
             live-maker/postsetup-nvidia.sh \
-            tools/check-coherence.sh
+            tools/check-coherence.sh \
+            tools/check-installer.sh
+
+      # El instalador no lleva 'set -e' a proposito (upstream usa el codigo de
+      # dialog y de grep como control de flujo). Este lint comprueba que todo
+      # comando que escribe en el disco comprueba su exit code.
+      - name: Check installer error handling
+        run: sh tools/check-installer.sh
 
       - name: Build Neko-Void ISO (${{ matrix.iso }})
         env:

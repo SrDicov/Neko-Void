@@ -597,6 +597,11 @@ set_locale() {
         sed -e "/${LOCALE}/s/^\#//" -i $TARGETDIR/etc/default/libc-locales
         echo "Running xbps-reconfigure -f glibc-locales ..." >$LOG
         chroot $TARGETDIR xbps-reconfigure -f glibc-locales >$LOG 2>&1
+        if [ $? -ne 0 ]; then
+            DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to generate the locale $LOCALE in the target!\ncheck $LOG for errors." ${MSGBOXSIZE}
+            DIE 1
+        fi
     fi
 }
 set_rice() {
