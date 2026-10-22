@@ -228,6 +228,15 @@ jobs:
       - name: Generate Checksums
         run: |
           ISO_FILE=$(find "$GITHUB_WORKSPACE" -name "*.iso" | head -n 1)
+          # ponytail: si el build no dejo ninguna ISO, esto tiene que fallar
+          # aqui y decir por que. Si no, el error sale tres pasos despues
+          # como "sha256sum: '': No such file or directory" y no senala la
+          # causa (un contenedor que salio con 0 sin hacer nada).
+          if [ -z "$ISO_FILE" ]; then
+            echo "::error::No se ha generado ninguna ISO en $GITHUB_WORKSPACE" >&2
+            ls -la "$GITHUB_WORKSPACE/live-maker" >&2
+            exit 1
+          fi
           if [ -n "$ISO_FILE" ]; then
             ISO_NAME=$(basename "$ISO_FILE")
             echo "ISO_FILE=$ISO_FILE" >> "$GITHUB_ENV"
