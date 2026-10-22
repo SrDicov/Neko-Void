@@ -2,3 +2,6 @@ desc=KDE + NVIDIA 470
 base=kde
 iso=nekovoid-nvidia470
 extra=nvidia470 linux-headers nvidia470-gtklibs nvidia470-libs nvidia470-libs-32bit nvidia470-dkms nvidia470-opencl
+# ponytail: este flavor compila pero no se ha arrancado en QEMU (sin GPU real
+# el driver NVIDIA no valida). Riesgo: cuelgue en hardware NVIDIA. Antes de
+# publicar una release de estos, probarlo en hardware con NVIDIA.

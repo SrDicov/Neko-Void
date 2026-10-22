@@ -2,3 +2,6 @@ desc=KDE + NVIDIA 580
 base=kde
 iso=nekovoid-nvidia580
 extra=nvidia580 linux-headers nvidia580-gtklibs nvidia580-libs nvidia580-libs-32bit nvidia580-dkms nvidia580-opencl
+# ponytail: este flavor compila pero no se ha arrancado en QEMU (sin GPU real
+# el driver NVIDIA no valida). Riesgo: cuelgue en hardware NVIDIA. Antes de
+# publicar una release de estos, probarlo en hardware con NVIDIA.

@@ -2,3 +2,6 @@ desc=KDE + NVIDIA 390
 base=kde
 iso=nekovoid-nvidia390
 extra=nvidia390 linux-headers nvidia390-gtklibs nvidia390-libs nvidia390-libs-32bit nvidia390-dkms nvidia390-opencl
+# ponytail: este flavor compila pero no se ha arrancado en QEMU (sin GPU real
+# el driver NVIDIA no valida). Riesgo: cuelgue en hardware NVIDIA. Antes de
+# publicar una release de estos, probarlo en hardware con NVIDIA.

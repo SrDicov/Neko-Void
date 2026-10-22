@@ -30,3 +30,19 @@ historia de git es el backup: todo lo de aquí se recupera con un comando.
   temporal con el token sustituido y pasa como `-I` adicional.
 - **Cómo recuperarlos**: `git checkout 98c570b2 -- 'live-maker/*/usr/bin/void-installer'`
   — pero no conviene: volvería a introducir los forks.
+
+## Assets externos que desaparecieron
+
+- **`xfce.tar`** (dataset de HuggingFace `arepaconcafe/untested-neko`): era
+  el config extra del usuario `anon` para el flavor `xfce`. El dataset se
+  limpió (ahora solo contiene ISOs viejas) y el fichero da 404. **Consecuencia
+ **: la ISO de xfce se construye con el config del overlay, sin el extra.
+  No es un bug, es una pérdida conocida.
+  - La descarga es **opcional** a propósito: `wget` sale con 8 en un 404 y con
+    `set -e` tumbaba el build entero.
+  - Si vuelve a estar disponible, la URL es
+    `https://huggingface.co/datasets/arepaconcafe/untested-neko/resolve/main/xfce.tar`.
+- **Los defaults de GRUB para NVIDIA** (`grub`): también venían de ese
+  dataset y por lo mismo daba 404. Ahora están en el repo:
+  `live-maker/nvidia/etc/default/grub` (mismo contenido que escribe
+  `postsetup-nvidia.sh`).

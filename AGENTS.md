@@ -2,6 +2,17 @@
 
 ISO builder for Neko-Void Linux (Void-based live ISOs). No app code, no tests/lint/typecheck.
 
+## Cómo trabajar aquí
+- Si una review (o un plan) pide un cambio que rompe el comportamiento, **demuéstralo con un
+  test ejecutable antes de aplicarlo**. La review también se equivoca: `set -e` en
+  `installer.sh` mataba el instalador (grep y dialog usan su exit code como control de
+  flujo) y la solución fue comprobar los comandos destructivos + un lint, no `errexit`.
+- Un paso del CI en verde **no** significa que el build funcionó: comprueba el artefacto
+  (la ISO) y falla ahí si no existe.
+- Todo lo que se borre del repo se documenta en `docs/removed.md` con el motivo, la fecha
+  y el comando de recuperación. La historia de git es el backup; el *porqué* también se
+  escribe.
+
 ## Setup
 - Submodules are empty on fresh clone and required (`kasha-installer`, `Neko-Wizard`, `neko-void-packages` pkgs):
   `git submodule update --init --recursive`
