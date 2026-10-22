@@ -146,7 +146,13 @@ jobs:
               mkdir -p "$OV/etc/modules-load.d"
               printf 'nvidia\n' > "$OV/etc/modules-load.d/nvidia.conf"
               ;;
-            labwc-musl)
+          esac
+
+          # La clave de z-repo-musl: la necesitan los flavors musl (segun el
+          # arch del manifest, no segun el nombre del flavor).
+          ARCH=$(sh flavor.sh "$DESKTOP" arch)
+          case "$ARCH" in
+            *-musl)
               mkdir -p /var/db/xbps/keys
               curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
               chmod 644 /var/db/xbps/keys/zlinux-repo.pub
