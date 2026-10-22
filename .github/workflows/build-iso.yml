@@ -160,10 +160,11 @@ jobs:
           esac
 
           # ─── Autologin: una sola fuente (live-maker/autologin) ───
-          # cp -n: si el overlay trae su propia variante (xfce), esa gana.
+          # Si el overlay trae su propia variante (xfce), esa gana.
           if echo "$DM" | grep -q lightdm; then
             mkdir -p "$OV/etc/pam.d"
-            cp -n autologin/etc/pam.d/lightdm-autologin "$OV/etc/pam.d/"
+            [ -f "$OV/etc/pam.d/lightdm-autologin" ] ||
+              cp autologin/etc/pam.d/lightdm-autologin "$OV/etc/pam.d/"
           fi
 
           # ─── Pasos comunes a todos los flavors ───

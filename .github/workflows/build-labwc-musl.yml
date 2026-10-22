@@ -75,11 +75,12 @@ jobs:
               curl -sL https://srdicov.github.io/z-repo/keys/zlinux-repo.pub -o /var/db/xbps/keys/zlinux-repo.pub
               chmod 644 /var/db/xbps/keys/zlinux-repo.pub
               cd /workspace/live-maker
-              # Autologin: fuente unica (live-maker/autologin). cp -n no pisa
-              # la variante que traiga el overlay.
+              # Autologin: fuente unica (live-maker/autologin). Si el overlay
+              # trae su propia variante, esa gana.
               OV=$(sh flavor.sh labwc-musl overlay)
               mkdir -p "$OV/etc/pam.d"
-              cp -n autologin/etc/pam.d/lightdm-autologin "$OV/etc/pam.d/"
+              [ -f "$OV/etc/pam.d/lightdm-autologin" ] ||
+                cp autologin/etc/pam.d/lightdm-autologin "$OV/etc/pam.d/"
               # El cache se deja en manos de root: si no, xbps no puede cambiar
               # los permisos de los .xbps que hay ahi.
               chown -R anon:anon /workspace/live-maker
