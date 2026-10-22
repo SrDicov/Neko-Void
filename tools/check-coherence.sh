@@ -169,6 +169,32 @@ while read -r d; do
 		err "los workflows usan '$d/...' pero 'live-maker/$d' no existe"
 done <"$tmp/wpaths"
 
+# ── 9. La arch declarada tiene que ser una que el builder pueda hacer ───
+# Los flavors de Neko son x86_64: sus overlays, el bootloader y los repos son
+# x86_64. Las demas arches se construyen con el toolkit upstream de
+# void-mklive (que se comprueba mas abajo), no con estos flavors.
+for f in "$FLAVORS"/*; do
+	[ -f "$f" ] || continue
+	name="$(basename "$f")"
+	arch="$(fget "$name" arch)"
+	case "$arch" in
+		x86_64|x86_64-musl) ;;
+		*) err "flavors/$name declara arch=$arch; el builder de Neko solo hace x86_64 y x86_64-musl" ;;
+	esac
+done
+
+# ── 10. El toolkit multi-arch de upstream tiene que seguir intacto ──────
+# Es el camino para aarch64/armv7l/armv6l/i686 (lib.sh:279 mapea platform ->
+# arch). El plan original pedia borrar el Makefile: no se borra.
+for f in Makefile lib.sh mkrootfs.sh mkplatformfs.sh mkimage.sh mknet.sh; do
+	[ -f "live-maker/$f" ] ||
+		err "falta live-maker/$f (toolkit multi-arch de upstream void-mklive)"
+done
+[ -d "live-maker/platforms" ] ||
+	err "falta live-maker/platforms (definiciones de plataformas upstream)"
+grep -q "aarch64" live-maker/lib.sh ||
+	err "live-maker/lib.sh ya no mapea aarch64: el camino multi-arch se ha roto"
+
 if [ "$errors" -ne 0 ]; then
 	echo
 	echo "$errors incoherencia(s). Arregla los manifests, el builder o los workflows." >&2

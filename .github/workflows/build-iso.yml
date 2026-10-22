@@ -136,8 +136,10 @@ jobs:
             xfce)
               rm -rf "$OV/etc/skel/.config" "$OV/home/anon/.config"
               # El config extra vive en HuggingFace; si no esta, se sigue con
-              # el del overlay (wget sale con 8 en un 404 y tumbaba el build).
-              if wget -q https://huggingface.co/datasets/arepaconcafe/untested-neko/resolve/main/xfce.tar; then
+              # el del overlay. ponytail: --timeout para no colgarse con un
+              # servidor lento (wget sale con 8 en un 404 y tumbaba el build).
+              if wget -q --timeout=15 --tries=2 \
+                 https://huggingface.co/datasets/arepaconcafe/untested-neko/resolve/main/xfce.tar; then
                 tar -xf xfce.tar -C "$OV/home/anon/"
                 tar -xf xfce.tar -C "$OV/etc/skel/"
               else
@@ -145,15 +147,9 @@ jobs:
               fi
               ;;
             nvidia*|kde-nvidia|niri-nvidia)
-              mkdir -p "$OV/etc/default"
-              cp nvidia-grub.default "$OV/etc/default/grub"
-
-              mkdir -p "$OV/etc/dracut.conf.d"
-              printf '# Modulos esenciales de NVIDIA en el initramfs\nadd_drivers+=" nvidia nvidia_modeset nvidia_uvm nvidia_drm "\n' > "$OV/etc/dracut.conf.d/nvidia.conf"
-              chmod 644 "$OV/etc/dracut.conf.d/nvidia.conf"
-
-              mkdir -p "$OV/etc/modules-load.d"
-              printf 'nvidia\n' > "$OV/etc/modules-load.d/nvidia.conf"
+              # Ficheros de NVIDIA (grub defaults, dracut, modules-load): van
+              # en el repo, no generados aqui (politica en datos).
+              cp -rn nvidia/etc/. "$OV/etc/"
               ;;
           esac
 

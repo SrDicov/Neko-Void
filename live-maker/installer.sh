@@ -601,6 +601,11 @@ set_locale() {
 }
 set_rice() {
     cp /home/.profile /home/$USERLOGIN/
+    if [ $? -ne 0 ]; then
+        DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to copy the user profile to $USERLOGIN!\ncheck $LOG for errors." ${MSGBOXSIZE}
+        DIE 1
+    fi
 }
 menu_timezone() {
     local areas=(Africa America Antarctica Arctic Asia Atlantic Australia Europe Indian Pacific)
@@ -786,8 +791,18 @@ set_useraccount() {
     [ -z "$USERACCOUNT_DONE" ] && return
     chroot $TARGETDIR useradd -m -G "$(get_option USERGROUPS)" \
         -c "$(get_option USERNAME)" "$(get_option USERLOGIN)"
+    if [ $? -ne 0 ]; then
+        DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to create the user account!\ncheck $LOG for errors." ${MSGBOXSIZE}
+        DIE 1
+    fi
     echo "$(get_option USERLOGIN):$(get_option USERPASSWORD)" | \
         chroot $TARGETDIR chpasswd -c SHA512
+    if [ $? -ne 0 ]; then
+        DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to set the user password!\ncheck $LOG for errors." ${MSGBOXSIZE}
+        DIE 1
+    fi
 }
 
 menu_bootloader() {
@@ -1181,6 +1196,11 @@ mount_filesystems() {
         [ ! -d $TARGETDIR/$f ] && mkdir $TARGETDIR/$f
         echo "Mounting $TARGETDIR/$f..." >$LOG
         mount --rbind /$f $TARGETDIR/$f >$LOG 2>&1
+        if [ $? -ne 0 ]; then
+            DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to mount /$f on ${TARGETDIR}/$f!\ncheck $LOG for errors." ${MSGBOXSIZE}
+            DIE 1
+        fi
     done
 }
 
@@ -1198,6 +1218,11 @@ umount_filesystems() {
     done
     echo "Unmounting $TARGETDIR..." >$LOG
     umount -R $TARGETDIR >$LOG 2>&1
+    if [ $? -ne 0 ]; then
+        DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to unmount ${TARGETDIR}!\ncheck $LOG for errors." ${MSGBOXSIZE}
+        DIE 1
+    fi
 }
 
 log_and_count() {
@@ -1379,6 +1404,11 @@ Root partition not empty! Aborting..." ${MSGBOXSIZE}
         # Remove live user.
         echo "Removing $USERNAME live user from targetdir ..." >$LOG
         chroot $TARGETDIR userdel -r $USERNAME >$LOG 2>&1
+        if [ $? -ne 0 ]; then
+            DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to remove the live user $USERNAME from the target!\ncheck $LOG for errors." ${MSGBOXSIZE}
+            DIE 1
+        fi
         rm -f $TARGETDIR/etc/sudoers.d/99-void-live
         sed -i "s,GETTY_ARGS=\"--noclear -a $USERNAME\",GETTY_ARGS=\"--noclear\",g" $TARGETDIR/etc/sv/agetty-tty1/conf
         TITLE="Check $LOG for details ..."
@@ -1387,6 +1417,11 @@ Root partition not empty! Aborting..." ${MSGBOXSIZE}
         # mount required fs
         mount_filesystems
         chroot $TARGETDIR dracut --no-hostonly --add-drivers "ahci" --force >>$LOG 2>&1
+        if [ $? -ne 0 ]; then
+            DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
+failed to rebuild the initramfs for the target!\ncheck $LOG for errors." ${MSGBOXSIZE}
+            DIE 1
+        fi
         INFOBOX "Removing temporary packages from target ..." 4 60
         echo "Removing temporary packages from target ..." >$LOG
         TO_REMOVE="dialog xtools-minimal xmirror"

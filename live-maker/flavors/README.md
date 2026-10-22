@@ -34,15 +34,29 @@ paquetes con `extra=`. Cada uno tiene su `iso=` propio: antes `kde-nvidia` y
 
 ## Multi-arch
 
-`arch` es el sitio donde se declara el soporte por arquitectura. Hoy solo hay
-`x86_64` y `x86_64-musl`: el resto de arquitecturas (`aarch64`, `armv7l`, `i686`)
-viven en el toolkit upstream de void-mklive (`Makefile` + `mkplatformfs.sh` +
-`mkimage.sh` + `platforms/`), que este repo **no** modifica.
+Hay **dos caminos distintos**, y no se mezclan:
 
-`// ponytail: armv7l/aarch64/i686 sin build propio aquí. Si hacen falta, el
-mecanismo es un flavor más (arch=...) y un bootloader por arch (Limine cubre
-BIOS+UEFI en x86; arm32 necesita U-Boot/extlinux). No se implementa hasta que
-haya hardware o usuario real.`
+| Camino | Qué construye | Arches |
+|---|---|---|
+| **Flavors de Neko** (`flavors/`) | Las ISOs de marca (MATE, KDE, labwc…) | `x86_64`, `x86_64-musl` |
+| **Toolkit upstream** (`Makefile`, `mkrootfs.sh`, `mkplatformfs.sh`, `mkimage.sh`, `platforms/`) | Rootfs/platformfs/imágenes de Void | `x86_64`, `aarch64`, `armv7l`, `armv6l`, `i686` (+ musl) |
+
+El mapeo platform → arch está en `live-maker/lib.sh` (`set_target_arch_from_platform`,
+línea 279): `rpi-aarch64*`/`pinebookpro*`/`asahi*` → aarch64, `rpi-armv7l*` → armv7l,
+`rpi-armv6l*` → armv6l, `i686*` → i686, `x86_64*` → x86_64.
+
+**Por qué los flavors no declaran aarch64**: sus overlays, el bootloader (GRUB/Limine) y
+los repos de Neko son x86_64. Poner `arch=aarch64` en un manifest sería mentira: el
+builder no lo puede hacer. `tools/check-coherence.sh` lo comprueba (una arch fuera de
+{x86_64, x86_64-musl} es un error) y comprueba además que el toolkit upstream siga
+intacto, para que nadie borre el camino multi-arch por un cleanup.
+
+`// ponytail: armv7l/aarch64/i686 se construyen con el Makefile de upstream, no con
+los flavors de Neko. Si alguna vez hace falta una ISO de Neko para otra arch, es un
+flavor nuevo (con su overlay y su bootloader: Limine cubre BIOS+UEFI en x86, arm32
+necesita U-Boot/extlinux) más el soporte multi-arch de mklive. No se implementa hasta
+que haya hardware o usuario real.`
+
 
 
 ## Comprobación
