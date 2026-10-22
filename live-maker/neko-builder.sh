@@ -251,6 +251,15 @@ build_iso() {
             -r https://repo-de.voidlinux.org/current
             -r https://repo-de.voidlinux.org/current/multilib/nonfree
             -r https://repo-de.voidlinux.org/current/multilib
+            # ─── Ryoku ─────────────────────────────────────────────────────
+            # El escritorio completo (shell, Hub, lockscreen, CLI) y la variante
+            # del compositor. El unico canal de Void publicado es testing:
+            # stable/void/x86_64 responde 404.
+            -r https://repo.ryoku.dev/stable/void/channels/testing/x86_64
+            # El carril de Hyprland: Void no puede compilarlo (GCC 14 no tiene
+            # #embed, operator+(string,string_view), ranges::starts_with ni
+            # vector::insert_range), asi que viene firmado desde el z-repo.
+            -r https://github.com/SrDicov/z-repo/releases/download/stable
         )
     fi
 

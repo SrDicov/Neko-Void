@@ -503,6 +503,89 @@ NIRI="
 "
 
 # ─────────────────────────────────────────────
+# Ryoku
+# ─────────────────────────────────────────────
+# El escritorio de Ryoku. El compositor y su pila vienen del z-repo (Void no
+# puede compilarlos: su toolchain es demasiado viejo), y el shell, el Hub, la
+# pantalla de bloqueo, la CLI y las apps de serie, del repositorio de Ryoku.
+#
+# No usan la lista NIRI de neko: Ryoku trae su propio compositor, su shell y
+# sus temas, y NIRI instala noctalia y demas, que son la rice de neko.
+RYOKU_N="
+	ryoku-keyring
+	ryoku-desktop
+	ryoku-desktop-niri
+	ryoku-keysounds-niri
+	ryoku-rashin
+	kitty
+	ryotunes
+	ryomanager
+	bash-completion
+	blesh
+	fastfetch
+	fish-shell
+	gamemode
+	gamescope
+	gparted
+	flatpak
+	MangoHud
+	nautilus
+	nautilus-python
+	neovim
+	openrgb
+	pavucontrol
+	songrec
+	starship
+	waifu2x-ncnn-vulkan
+	yazi
+	gvfs-afc
+	gvfs-mtp
+	gvfs-smb
+	gtk-update-icon-cache
+"
+
+# ─────────────────────────────────────────────
+# Ryoku
+# ─────────────────────────────────────────────
+# El escritorio de Ryoku. El compositor y su pila vienen del z-repo (Void no
+# puede compilarlos: su toolchain es demasiado viejo), y el shell, el Hub, la
+# pantalla de bloqueo, la CLI y las apps de serie, del repositorio de Ryoku.
+#
+# No usan la lista NIRI de neko: Ryoku trae su propio compositor, su shell y
+# sus temas, y NIRI instala noctalia y demas, que son la rice de neko.
+RYOKU_H="
+	ryoku-keyring
+	ryoku-desktop
+	ryoku-desktop-hyprland
+	ryoku-rashin
+	kitty
+	ryotunes
+	ryomanager
+	bash-completion
+	blesh
+	fastfetch
+	fish-shell
+	gamemode
+	gamescope
+	gparted
+	flatpak
+	MangoHud
+	nautilus
+	nautilus-python
+	neovim
+	openrgb
+	pavucontrol
+	songrec
+	starship
+	waifu2x-ncnn-vulkan
+	yazi
+	gvfs-afc
+	gvfs-mtp
+	gvfs-smb
+	gtk-update-icon-cache
+"
+
+# ─────────────────────────────────────────────
 # Aplicaciones de escritorio
 # ─────────────────────────────────────────────
 DESKTOP_APPS="
@@ -704,6 +787,15 @@ NIRI_PACKAGES="
     ${DEFAULT}
     ${NIRI}
 "
+RYOKU_N_PACKAGES="
+    ${DEFAULT}
+    ${RYOKU_N}
+"
+
+RYOKU_H_PACKAGES="
+    ${DEFAULT}
+    ${RYOKU_H}
+"
 # Limpiar espacios extra y newlines, convertir a una línea
 PACKAGES_XORG=$(echo ${XORG_PACKAGES} | tr -s ' ')
 PACKAGES_XLIBRE=$(echo ${XLIBRE_PACKAGES} | tr -s ' ')
@@ -718,4 +810,6 @@ PACKAGES_CINNAMON=$(echo ${CINNAMON_PACKAGES} | tr -s ' ')
 PACKAGES_LABWC=$(echo ${LABWC_PACKAGES} | tr -s ' ')
 PACKAGES_MUSL_LABWC=$(echo ${MUSL_LABWC_PACKAGES} | tr -s ' ')
 PACKAGES_NIRI=$(echo ${NIRI_PACKAGES} | tr -s ' ')
+PACKAGES_RYOKU_N=$(echo ${RYOKU_N_PACKAGES} | tr -s ' ')
+PACKAGES_RYOKU_H=$(echo ${RYOKU_H_PACKAGES} | tr -s ' ')
 PACKAGES_MUSL=$(echo ${MUSL_PACKAGES} | tr -s ' ')

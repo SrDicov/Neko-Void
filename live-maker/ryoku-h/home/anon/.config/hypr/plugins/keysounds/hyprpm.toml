@@ -1,0 +1,16 @@
+# The build recipe: what `ryoku-hub desktop plugins rebuild` runs on a checkout or
+# a packaged box, in the format hyprpm reads. The plugin lives in the Ryoku
+# monorepo, so it tracks the Hyprland the repo ships and carries no commit pins.
+# The sample profiles are not built here: they ship in ryoku-keysounds-profiles
+# under /usr/share/ryoku/keysounds, which this .so reads at runtime.
+
+[repository]
+name = "ryoku-keysounds"
+authors = ["Ryoku"]
+description = "Keyboard sounds for Hyprland"
+commit_pins = []
+
+[keysounds]
+description = "Plays a keyboard sound on every key press"
+output = "keysounds.so"
+build = ["make keysounds.so"]

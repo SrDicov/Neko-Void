@@ -1,0 +1,7 @@
+desc=Ryoku sobre niri (kernel mainline)
+overlay=ryoku-n
+packages=PACKAGES_RYOKU_N
+kernel=linux-mainline
+dm=emptty
+arch=x86_64
+iso=nekovoid-ryoku-n

@@ -28,6 +28,8 @@ on:
           - nvidia390
           - nvidia470
           - nvidia580
+          - ryoku-h
+          - ryoku-n
           - xfce
       bootloader:
         description: 'Bootloader de la ISO (grub = GRUB+isolinux, limine = Limine BIOS+UEFI)'
@@ -59,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        iso: ${{ fromJson(inputs.iso == 'all' && '["i3","icewm","jwm","kde","kde-nvidia","labwc","labwc-musl","lxqt","mate","matelibre","musl","niri","niri-nvidia","nvidia","nvidia-kde","nvidia390","nvidia470","nvidia580","xfce"]' || format('["{0}"]', inputs.iso)) }}
+        iso: ${{ fromJson(inputs.iso == 'all' && '["i3","icewm","jwm","kde","kde-nvidia","labwc","labwc-musl","lxqt","mate","matelibre","musl","niri","niri-nvidia","nvidia","nvidia-kde","nvidia390","nvidia470","nvidia580","ryoku-h","ryoku-n","xfce"]' || format('["{0}"]', inputs.iso)) }}
 
     steps:
       - name: Checkout

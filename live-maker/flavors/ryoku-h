@@ -1,0 +1,7 @@
+desc=Ryoku sobre Hyprland (kernel mainline)
+overlay=ryoku-h
+packages=PACKAGES_RYOKU_H
+kernel=linux-mainline
+dm=emptty
+arch=x86_64
+iso=nekovoid-ryoku-h
