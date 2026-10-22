@@ -38,9 +38,23 @@ flavor_get() {
     printf '%s\n' "$_fg_val"
 }
 
+# flavor_list: los nombres de los flavors (los manifests). Los ficheros con
+# extension (README.md) no son flavors.
+flavor_list() {
+    for _fl_file in "$FLAVOR_DIR"/*; do
+        [ -f "$_fl_file" ] || continue
+        case "${_fl_file##*/}" in *.*) continue ;; esac
+        printf '%s\n' "${_fl_file##*/}"
+    done
+}
+
 if [ "${0##*/}" = "flavor.sh" ]; then
+    if [ "${1:-}" = "--list" ]; then
+        flavor_list
+        exit 0
+    fi
     if [ $# -lt 2 ]; then
-        echo "uso: flavor.sh <flavor> <clave>" >&2
+        echo "uso: flavor.sh <flavor> <clave> | flavor.sh --list" >&2
         exit 2
     fi
     flavor_get "$1" "$2" || {

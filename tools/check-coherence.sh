@@ -28,7 +28,7 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
 # ── A. Flavors = los manifests ────────────────────────────────────────────
-ls "$FLAVORS" 2>/dev/null | sort >"$tmp/flavors" || : >"$tmp/flavors"
+sh live-maker/flavor.sh --list 2>/dev/null | sort >"$tmp/flavors" || : >"$tmp/flavors"
 
 if [ ! -s "$tmp/flavors" ]; then
 	echo "ERROR: no hay ningun manifest en $FLAVORS" >&2

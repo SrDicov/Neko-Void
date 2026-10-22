@@ -75,10 +75,8 @@ Uso: $(basename "$0") [FLAVOR] [OPCIONES]
 
 Flavors disponibles:
 EOF
-    local f name desc
-    for f in flavors/*; do
-        [ -f "$f" ] || continue
-        name="$(basename "$f")"
+    local name desc
+    for name in $(flavor_list); do
         desc="$(flavor_get "$name" desc)"
         printf "  ${GREEN}%-14s${RESET} %s\n" "$name" "$desc"
     done
@@ -283,13 +281,11 @@ interactive_menu() {
     echo ""
 
     # La lista sale de flavors/: no puede desincronizarse con el builder.
-    local -a flavor_list=()
-    local f name total=0
-    for f in flavors/*; do
-        [ -f "$f" ] || continue
-        name="$(basename "$f")"
+    local -a flavor_names=()
+    local name total=0
+    for name in $(flavor_list); do
         total=$((total + 1))
-        flavor_list+=("$name")
+        flavor_names+=("$name")
         echo -e "  ${GREEN}$total)${RESET} ${name}  ${YELLOW}→${RESET} $(flavor_get "$name" desc)"
     done
 
@@ -306,7 +302,7 @@ interactive_menu() {
     echo ""
     read -r -p "  ¿Agregar paquetes extra? (nombres separados por espacio, Enter para omitir): " extra_pkgs
 
-    build_iso "${flavor_list[$((choice - 1))]}" "$extra_pkgs"
+    build_iso "${flavor_names[$((choice - 1))]}" "$extra_pkgs"
 }
 
 # ─────────────────────────────────────────────
