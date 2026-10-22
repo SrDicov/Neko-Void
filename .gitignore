@@ -1,5 +1,5 @@
 Neko-Wizard/builddir
-live-maker/xbps-cachedir-x86_64
+live-maker/xbps-cachedir-*
 live-maker/*.iso
 xbps-cachedir-x86_64/
 dbg-cache-bind/
