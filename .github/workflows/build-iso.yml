@@ -190,6 +190,16 @@ jobs:
               ;;
           esac
 
+          # Las claves que trae el overlay se siembran en el keyring del
+          # contenedor: el build tiene que fiarse del repo ANTES de instalar
+          # de el, y la importacion interactiva puede fallar ("Failed to
+          # import pubkey ... Resource temporarily unavailable"). El nombre del
+          # fichero es la huella, que es como xbps las lee.
+          if [ -d "$OV/var/db/xbps/keys" ]; then
+            mkdir -p /var/db/xbps/keys
+            cp -f "$OV/var/db/xbps/keys/"*.plist /var/db/xbps/keys/ 2>/dev/null || true
+          fi
+
           # ─── Autologin: una sola fuente (live-maker/autologin) ───
           # Si el overlay trae su propia variante (xfce), esa gana.
           if echo "$DM" | grep -q lightdm; then

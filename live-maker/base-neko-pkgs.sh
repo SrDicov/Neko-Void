@@ -512,6 +512,7 @@ NIRI="
 # No usan la lista NIRI de neko: Ryoku trae su propio compositor, su shell y
 # sus temas, y NIRI instala noctalia y demas, que son la rice de neko.
 RYOKU_N="
+	emptty
 	ryoku-keyring
 	ryoku-desktop
 	ryoku-desktop-niri
@@ -554,6 +555,7 @@ RYOKU_N="
 # No usan la lista NIRI de neko: Ryoku trae su propio compositor, su shell y
 # sus temas, y NIRI instala noctalia y demas, que son la rice de neko.
 RYOKU_H="
+	emptty
 	ryoku-keyring
 	ryoku-desktop
 	ryoku-desktop-hyprland
@@ -787,13 +789,22 @@ NIRI_PACKAGES="
     ${DEFAULT}
     ${NIRI}
 "
+# El set de neko (DEFAULT) no sirve tal cual en un escritorio Ryoku:
+# TLP es excluyente con power-profiles-daemon (la politica de energia y tapa
+# de Ryoku) y la instalacion aborta con "Transaction aborted due to conflicting
+# packages"; y la rice de neko (temas, fuentes, el asistente, el instalador
+# de Void) la sustituye Ryoku con la suya.
+RYOKU_BASE=$(echo ${DEFAULT} | tr ' ' '\n' \
+    | grep -vE '^(tlp|tlp-pd|tlp-rdw|kasha-installer|Neko-Wizard|neko-fonts|neko-icons|neko-themes|neko-backgrounds)$' \
+    | tr '\n' ' ')
+
 RYOKU_N_PACKAGES="
-    ${DEFAULT}
+    ${RYOKU_BASE}
     ${RYOKU_N}
 "
 
 RYOKU_H_PACKAGES="
-    ${DEFAULT}
+    ${RYOKU_BASE}
     ${RYOKU_H}
 "
 # Limpiar espacios extra y newlines, convertir a una línea
