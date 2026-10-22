@@ -5,3 +5,7 @@ kernel=linux-mainline
 dm=emptty
 arch=x86_64
 iso=nekovoid-ryoku-h
+# Sin TLP: es excluyente con power-profiles-daemon, que trae ryoku-desktop
+# (la politica de energia y tapa la lleva Ryoku). Y turnstiled, que es el que
+# supervisa los servicios de sesion del usuario (~/.config/service).
+services=dbus NetworkManager polkitd rtkit sshd chronyd zramen power-profiles-daemon turnstiled ryoku-var-state ryoku-boot-guard

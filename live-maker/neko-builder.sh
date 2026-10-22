@@ -51,6 +51,11 @@ export FLAVOR_DIR="$SCRIPT_DIR/flavors"
 # ─────────────────────────────────────────────
 # Servicios base (el display manager se agrega
 # automáticamente según el escritorio)
+#
+# Es el valor por defecto: un flavor puede declarar services= en su manifest
+# para tener otra lista, porque el servicio y el paquete que lo trae tienen que
+# ser la misma decisión (un flavor sin TLP no puede habilitar tlp-pd, o el
+# build muere en "Enabling services" con "service tlp not in /etc/sv").
 # ─────────────────────────────────────────────
 SERVICES_BASE="dbus NetworkManager polkitd rtkit sshd chronyd zramen tlp tlp-pd"
 
@@ -120,7 +125,7 @@ build_iso() {
         exit 1
     fi
 
-    local desc overlay overlay2 packages kernel dm arch iso_prefix postsetup
+    local desc overlay overlay2 packages kernel dm arch iso_prefix postsetup services
     desc="$(flavor_get "$desktop" desc)"
     overlay="$(flavor_get "$desktop" overlay)"
     overlay2="$(flavor_get "$desktop" overlay2)"
@@ -130,6 +135,11 @@ build_iso() {
     arch="$(flavor_get "$desktop" arch)"
     iso_prefix="$(flavor_get "$desktop" iso)"
     postsetup="$(flavor_get "$desktop" postsetup)"
+    # Los servicios base son los de siempre, salvo que el manifest declare
+    # otros: el set de paquetes y los servicios que se habilitan tienen que
+    # encajar (un flavor sin TLP no habilita tlp-pd).
+    services="$(flavor_get "$desktop" services)"
+    [ -n "$services" ] || services="$SERVICES_BASE"
 
     if [ -z "$packages" ]; then
         echo -e "${BOLD}Error:${RESET} flavors/$desktop no define 'packages'"
@@ -230,7 +240,7 @@ build_iso() {
         cmd_args+=(-x "$postsetup")
     fi
 
-    cmd_args+=(-S "$SERVICES_BASE $dm")
+    cmd_args+=(-S "$services $dm")
 
     # ponytail: repos glibc y musl no se mezclan. musl usa repo-ci (mirror de CI
     # upstream, consistente) + z-repo-musl.
