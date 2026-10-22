@@ -511,6 +511,9 @@ NIRI="
 #
 # No usan la lista NIRI de neko: Ryoku trae su propio compositor, su shell y
 # sus temas, y NIRI instala noctalia y demas, que son la rice de neko.
+#
+# voxtype y ryoku-palette-bridge van en el set porque el escritorio instala un
+# servicio de sesion para cada uno y sin el binario su run queda en down.
 RYOKU_N="
 	emptty
 	ryoku-keyring
@@ -518,8 +521,6 @@ RYOKU_N="
 	ryoku-desktop-niri
 	ryoku-keysounds-niri
 	ryoku-rashin
-	# Servicios de sesion que el escritorio instala y espera: sin el binario
-	# su run queda en down. voxtype viene de Void; palette-bridge, de Ryoku.
 	voxtype
 	ryoku-palette-bridge
 	kitty
@@ -564,8 +565,6 @@ RYOKU_H="
 	ryoku-desktop
 	ryoku-desktop-hyprland
 	ryoku-rashin
-	# Servicios de sesion que el escritorio instala y espera: sin el binario
-	# su run queda en down. voxtype viene de Void; palette-bridge, de Ryoku.
 	voxtype
 	ryoku-palette-bridge
 	kitty
