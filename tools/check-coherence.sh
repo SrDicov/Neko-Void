@@ -145,7 +145,21 @@ while read -r branch; do
 	done
 done <"$tmp/branches"
 
-# ── 7. Las rutas de overlay que citan los workflows tienen que existir ───
+# ── 7. La lista de repos no puede mezclar glibc y musl ───────────────────
+# Un repo musl no tiene x86_64-repodata: xbps lo busca igual al sincronizar
+# y aborta con "[reposync] failed to fetch ... Not Found".
+awk '
+	/-musl \]\]; then/ { mode = "musl"; next }
+	/^[[:space:]]*else[[:space:]]*$/ && mode == "musl" { mode = "glibc"; next }
+	/^[[:space:]]*fi[[:space:]]*$/ { mode = ""; next }
+	mode == "glibc" && /-r https/ && /musl/ { print }
+' "$BUILDER" >"$tmp/bad_repos"
+if [ -s "$tmp/bad_repos" ]; then
+	err "la lista glibc de repos incluye repos musl (xbps aborta al sincronizar):"
+	sed 's/^/    /' "$tmp/bad_repos" >&2
+fi
+
+# ── 8. Las rutas de overlay que citan los workflows tienen que existir ───
 grep -hoE '[a-z0-9_-]+/(etc|home|usr|var)/' "$WORKFLOWS"/*.yml 2>/dev/null |
 	sed 's|/.*||' | sort -u >"$tmp/wpaths"
 while read -r d; do

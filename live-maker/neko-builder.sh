@@ -230,9 +230,13 @@ build_iso() {
     cmd_args+=(-S "$SERVICES_BASE $dm")
 
     # ponytail: repos glibc y musl no se mezclan. musl usa repo-ci (mirror de CI
-    # upstream, consistente) + z-repo-musl. El repo de sourceforge queda fuera:
-    # sirve versiones viejas (neko-themes 6.5_1) firmadas con otra clave y xbps
-    # aborta al no poder verificarlas.
+    # upstream, consistente) + z-repo-musl.
+    #
+    # La lista glibc NO puede llevar repos musl: un repo musl no tiene
+    # x86_64-repodata (tiene x86_64-musl-repodata), xbps lo busca igual al
+    # sincronizar y aborta con "[reposync] failed to fetch ... Not Found",
+    # tirando el build entero. Y el repo de sourceforge musl encima servia
+    # versiones viejas (neko-themes 6.5_1) firmadas con otra clave.
     if [[ "$arch" == *-musl ]]; then
         REPOS=(
             -r https://repo-ci.voidlinux.org/current/musl
@@ -247,10 +251,6 @@ build_iso() {
             -r https://repo-de.voidlinux.org/current
             -r https://repo-de.voidlinux.org/current/multilib/nonfree
             -r https://repo-de.voidlinux.org/current/multilib
-            -r https://repo-de.voidlinux.org/current/musl/bootstrap
-            -r https://repo-de.voidlinux.org/current/musl
-            -r https://repo-de.voidlinux.org/current/musl/nonfree
-            -r https://sourceforge.net/projects/neko-void/files/repo/musl
         )
     fi
 

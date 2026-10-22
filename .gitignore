@@ -4,3 +4,4 @@ live-maker/*.iso
 xbps-cachedir-x86_64/
 dbg-cache-bind/
 live-maker/*.iso.txt
+.tmp-iso/
