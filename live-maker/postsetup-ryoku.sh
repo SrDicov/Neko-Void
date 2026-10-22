@@ -11,12 +11,14 @@ set -eu
 
 rootfs=${1:?falta el rootfs}
 
-if [ -e "$rootfs/var/service/sddm" ]; then
+# -L ademas de -e: en el rootfs recien copiado el enlace puede apuntar a un
+# target que en el host no existe (symlink roto), y -e solo no lo ve.
+if [ -e "$rootfs/var/service/sddm" ] || [ -L "$rootfs/var/service/sddm" ]; then
     rm -f "$rootfs/var/service/sddm"
 fi
 
 # emptty tiene que estar habilitado: es el DM del manifest y el que lleva
 # AUTOLOGIN=true en el overlay.
-if [ -d "$rootfs/etc/sv/emptty" ] && [ ! -e "$rootfs/var/service/emptty" ]; then
+if [ -d "$rootfs/etc/sv/emptty" ] && [ ! -e "$rootfs/var/service/emptty" ] && [ ! -L "$rootfs/var/service/emptty" ]; then
     ln -s /etc/sv/emptty "$rootfs/var/service/emptty"
 fi
