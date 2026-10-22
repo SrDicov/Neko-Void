@@ -77,8 +77,9 @@ jobs:
               cd /workspace/live-maker
               # Autologin: fuente unica (live-maker/autologin). cp -n no pisa
               # la variante que traiga el overlay.
-              mkdir -p labwc/etc/pam.d
-              cp -n autologin/etc/pam.d/lightdm-autologin labwc/etc/pam.d/
+              OV=$(sh flavor.sh labwc-musl overlay)
+              mkdir -p "$OV/etc/pam.d"
+              cp -n autologin/etc/pam.d/lightdm-autologin "$OV/etc/pam.d/"
               # El cache se deja en manos de root: si no, xbps no puede cambiar
               # los permisos de los .xbps que hay ahi.
               chown -R anon:anon /workspace/live-maker
