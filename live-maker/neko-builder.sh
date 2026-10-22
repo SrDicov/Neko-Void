@@ -135,6 +135,14 @@ build_iso() {
     arch="$(flavor_get "$desktop" arch)"
     iso_prefix="$(flavor_get "$desktop" iso)"
     postsetup="$(flavor_get "$desktop" postsetup)"
+    # mklive ejecuta el postsetup por nombre, no por ruta: si el manifest lo
+    # declara relativo (postsetup-ryoku.sh) hay que absolutizarlo aqui o el
+    # build muere con "command not found".
+    case "$postsetup" in
+        "") ;;
+        /*) ;;
+        *) postsetup="$PWD/$postsetup" ;;
+    esac
     # Los servicios base son los de siempre, salvo que el manifest declare
     # otros: el set de paquetes y los servicios que se habilitan tienen que
     # encajar (un flavor sin TLP no habilita tlp-pd).
