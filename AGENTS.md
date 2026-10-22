@@ -35,3 +35,15 @@ ISO builder for Neko-Void Linux (Void-based live ISOs). No app code, no tests/li
 ## CI / Artifacts
 - GitHub `build-iso.yml`: manual dispatch only (`iso` choice + optional SourceForge upload), uploads to `arepaconcafe/untested-neko` HF dataset. GitLab `ci/build-{mate,xfce}.yml`: mate/xfce triggers.
 - `live-maker/README.md`: generated (`make README.md`), do not edit. `*.iso` + `xbps-cachedir-*` are gitignored build outputs.
+- **Puertas del CI** (todas antes del build, todas `sh tools/<algo>.sh`):
+  - `check-coherence.sh`: manifests ↔ builder ↔ `--help` ↔ matrix del CI, y rutas existentes.
+  - `check-workflows.sh`: el script del contenedor tiene que ser shell válido, su heredoc
+    tiene que cerrar en la columna 0 y el `docker run` tiene que llevar `-i` (el script va
+    por stdin). Sin `-i`, `sh -s` lee un script vacío: el contenedor sale con **0** y el
+    build "pasa" sin generar la ISO.
+  - `check-installer.sh`: todo comando destructivo de `installer.sh` comprueba su exit code.
+  - `test-wrapper.sh`: el wrapper de xbps no filtra los repos musl del target.
+- Un paso verde **no** significa que el build funcionó: si no hay ISO, el paso de
+  checksums falla con "No se ha generado ninguna ISO" (no con un error de `sha256sum` vacío).
+- Caches de GH: claves estables `xbps-labwc-musl-v2` y `xbps-iso-v2` (sin `hashFiles`).
+  Las claves viejas con `hashFiles` se borraron (3,6 GB).
