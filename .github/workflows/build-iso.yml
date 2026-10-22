@@ -190,7 +190,18 @@ jobs:
           chmod 755 "$OV/home/anon"
           rm -f "$OV/home/anon/.Xauthority" "$OV/home/anon/.ICEauthority"
 
-          su anon -c "bash neko-builder.sh $DESKTOP -b '$BOOT'"
+          # ponytail: los mirrors de Void se reindexan cada ~20 min y hay una
+          # ventana en la que el indice y los ficheros no cuadran ("Package
+          # 'jq' not found in repository pool" / "failed to download ...
+          # signature"). Es infraestructura, no el build: reintenta.
+          for attempt in 1 2 3; do
+            if su anon -c "bash neko-builder.sh $DESKTOP -b '$BOOT'"; then
+              break
+            fi
+            echo ">>> el build fallo (intento $attempt/3); reintento en 30 s" >&2
+            [ "$attempt" -lt 3 ] || exit 1
+            sleep 30
+          done
           EOS
           # El ISO lo crea root; el runner (otro uid) tiene que poder escribir
           # ahi los checksums y los trozos del split.

@@ -86,7 +86,18 @@ jobs:
               chown -R anon:anon /workspace/live-maker
               chmod 755 ./labwc/home/anon
               rm -f ./labwc/home/anon/.Xauthority ./labwc/home/anon/.ICEauthority
-              su anon -c "cd /workspace/live-maker && bash neko-builder.sh labwc-musl -b $BOOTLOADER"
+              # ponytail: los mirrors de Void se reindexan cada ~20 min y hay
+              # una ventana en la que el indice y los ficheros no cuadran
+              # ("Package 'jq' not found in repository pool"). Es
+              # infraestructura, no el build: reintenta.
+              for attempt in 1 2 3; do
+                if su anon -c "cd /workspace/live-maker && bash neko-builder.sh labwc-musl -b $BOOTLOADER"; then
+                  break
+                fi
+                echo ">>> el build fallo (intento $attempt/3); reintento en 30 s" >&2
+                [ "$attempt" -lt 3 ] || exit 1
+                sleep 30
+              done
               # El ISO lo crea root; el runner (otro uid) tiene que poder escribir
               # ahi los checksums y los trozos del split.
               chmod 777 /workspace/live-maker
