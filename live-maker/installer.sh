@@ -599,7 +599,9 @@ set_locale() {
         chroot $TARGETDIR xbps-reconfigure -f glibc-locales >$LOG 2>&1
     fi
 }
-
+set_rice() {
+    cp /home/.profile /home/$USERLOGIN/
+}
 menu_timezone() {
     local areas=(Africa America Antarctica Arctic Asia Atlantic Australia Europe Indian Pacific)
 
@@ -1358,8 +1360,7 @@ ${BOLD}Do you want to continue?${RESET}" 20 80 || return
     # Create and mount filesystems
     create_filesystems
 
-    # check if there are any files in the root partition, ignoring lost+found
-    if find "$TARGETDIR" -xdev -not -name 'lost+found' -not -type d | read; then
+    if ! find "$TARGETDIR" -xdev -mindepth 1 -maxdepth 1 -not -name 'lost+found' | read; then
         DIALOG --msgbox "${BOLD}${RED}ERROR:${RESET} \
 Root partition not empty! Aborting..." ${MSGBOXSIZE}
         DIE 1
@@ -1426,7 +1427,8 @@ Root partition not empty! Aborting..." ${MSGBOXSIZE}
     set_hostname
     set_rootpassword
     set_useraccount
-
+    #RICER
+    set_rice
     # Copy /etc/skel files for root.
     cp $TARGETDIR/etc/skel/.[bix]* $TARGETDIR/root
 

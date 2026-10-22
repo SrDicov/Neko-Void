@@ -18,6 +18,10 @@ export LANG="${LANG:-C.UTF-8}"
 # ponytail: mklive usa xbps-install con -r, y xbps >= 0.60 ignora XBPS_ARCH
 # con -r: el target musl no resuelve sus paquetes. El wrapper pasa XBPS_ROOT.
 export XBPS_INSTALL_CMD="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)/xbps-install-musl.sh"
+# Overlay temporal del instalador (lo crea build_iso); se borra al salir.
+INSTALL_OVERLAY=""
+cleanup() { [ -n "$INSTALL_OVERLAY" ] && rm -rf "$INSTALL_OVERLAY"; return 0; }
+trap cleanup EXIT
 KERNEL_DEFAULT="linux-mainline"
 KERNEL_STABLE="linux6.18"
 # ─────────────────────────────────────────────
@@ -303,10 +307,22 @@ build_iso() {
         -a "$arch"
         -I "$includedir"
     )
-    # ponytail: segundo -I pisa al primero en mklive; solo labwc-musl lo usa (repos musl sobre overlay labwc)
+    # ponytail: mklive.sh copia TODOS los -I al ROOTFS; el ultimo pisa solo los
+    # ficheros que compiten por la misma ruta. labwc-musl usa el segundo.
     if [ -n "$includedir2" ]; then
         cmd_args+=(-I "$includedir2")
     fi
+    # ─── Instalador: fuente única (live-maker/installer.sh) ───
+    # mklive.sh no instala el instalador (solo lo hace mkiso.sh, que el builder
+    # no usa), asi que se materializa aqui en un overlay temporal. Antes cada
+    # overlay traia su propia copia y pisaba la de mkiso: 10 forks divergentes
+    # del upstream y el @@MKLIVE_VERSION@@ sin sustituir.
+    INSTALL_OVERLAY="$(mktemp -d -t neko-installer.XXXXXX)"
+    mkdir -p "$INSTALL_OVERLAY/usr/bin"
+    sed "s/@@MKLIVE_VERSION@@/$(cat version)/g" installer.sh \
+        > "$INSTALL_OVERLAY/usr/bin/void-installer"
+    chmod 755 "$INSTALL_OVERLAY/usr/bin/void-installer"
+    cmd_args+=(-I "$INSTALL_OVERLAY")
     cmd_args+=(
         -o "$iso_name"
         -T "$ISO_TITLE"
