@@ -11,6 +11,10 @@ set -eu
 
 rootfs=${1:?falta el rootfs}
 
+# mklive crea /var/service al enlazar los servicios, y eso pasa despues del
+# postsetup: aqui todavia puede no existir.
+mkdir -p "$rootfs/var/service"
+
 # -L ademas de -e: en el rootfs recien copiado el enlace puede apuntar a un
 # target que en el host no existe (symlink roto), y -e solo no lo ve.
 if [ -e "$rootfs/var/service/sddm" ] || [ -L "$rootfs/var/service/sddm" ]; then
