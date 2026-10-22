@@ -155,6 +155,9 @@ build_iso() {
     local includedir="./$overlay"
     local includedir2=""
     [ -n "$overlay2" ] && includedir2="./$overlay2"
+    # Las claves de confianza que trae el overlay: el wrapper de xbps las
+    # siembra en el keyring del target (con -r, xbps no lee el del sistema).
+    export NEKO_TRUST_KEYS="${includedir}/var/db/xbps/keys"
     local iso_name="${iso_prefix}-${VERSION}.iso"
 
     # ─── Bootloader Limine: ISO propia + paquete limine dentro del live ───
@@ -266,10 +269,17 @@ build_iso() {
     # ponytail: zstd -L 22 tarda ~7 min en el squashfs de 2 GB y solo ahorra un
     # 5% de tamaño frente a -L 19. Para "isos actualizadas lo mas rapido
     # posible", -L 19 es el punto: 2,5x menos tiempo de CPU.
+    # ponytail: la ISO la crea root (sudo) y el builder puede correr como otro
+    # usuario. sudo limpia el entorno, asi que las variables que mklive
+    # necesita van explicitas: XBPS_INSTALL_CMD (el wrapper de xbps, que
+    # traduce -r a XBPS_ROOT y siembra las claves en el target) y
+    # NEKO_TRUST_KEYS (donde estan las claves del overlay).
     if [ "$BOOTLOADER" = limine ]; then
-        sudo ./neko-limine.sh "${REPOS[@]}" -i xz -s zstd -L 19 "${cmd_args[@]}"
+        sudo env XBPS_INSTALL_CMD="$XBPS_INSTALL_CMD" NEKO_TRUST_KEYS="$NEKO_TRUST_KEYS" \
+            ./neko-limine.sh "${REPOS[@]}" -i xz -s zstd -L 19 "${cmd_args[@]}"
     else
-        sudo ./mklive.sh "${REPOS[@]}" -i xz -s zstd -L 19 "${cmd_args[@]}"
+        sudo env XBPS_INSTALL_CMD="$XBPS_INSTALL_CMD" NEKO_TRUST_KEYS="$NEKO_TRUST_KEYS" \
+            ./mklive.sh "${REPOS[@]}" -i xz -s zstd -L 19 "${cmd_args[@]}"
     fi
     # ponytail: la ISO la crea root (sudo) y el builder puede correr como otro
     # usuario; la redireccion la hace el shell, asi que va dentro de sudo.

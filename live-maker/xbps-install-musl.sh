@@ -24,6 +24,17 @@ done
 
 [ -n "$root" ] && export XBPS_ROOT="$root"
 
+# Las claves de confianza del overlay (var/db/xbps/keys) tienen que estar en el
+# keyring del TARGET: con -r, xbps lee el keyring del root, no el del sistema,
+# y la importacion interactiva de la clave puede fallar ("Failed to import
+# pubkey ... Resource temporarily unavailable"). Sin esto, los paquetes de un
+# repo firmador salen con "the RSA signature is not valid" y la transaccion
+# aborta entera. El nombre del fichero es la huella, que es como xbps las lee.
+if [ -n "${NEKO_TRUST_KEYS:-}" ] && [ -n "$root" ]; then
+    mkdir -p "$root/var/db/xbps/keys"
+    cp -f "$NEKO_TRUST_KEYS"/*.plist "$root/var/db/xbps/keys/" 2>/dev/null || true
+fi
+
 # Quita los repos de otra arch si el target no es musl.
 # ponytail: mklive usa las dos variables segun la llamada: install_packages
 # pone XBPS_ARCH (linea 159) pero la llamada -U de la linea 165 solo pone

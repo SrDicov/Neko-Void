@@ -495,19 +495,32 @@ d1:93:22:ea:fc:f3:28:2b:70:0a:14:63:9e:b4:f3:85.plist   ← clave del repo de Ry
 > esté en la lista**, porque xbps no confía en él. Es el error más confuso del
 > proyecto: el repo está y el paquete no aparece.
 
-> **Y las claves tienen que estar también en el contenedor del build**, no solo
-> en la imagen: el build verifica los paquetes que descarga **antes** de
-> instalarlos, y para eso necesita fiarse del repo. Si no están, xbps pregunta
-> por la clave y la importación interactiva puede fallar ("Failed to import
-> pubkey … Resource temporarily unavailable"). La solución es sembrarlas en el
-> keyring del contenedor, antes de construir:
+> **Y las claves tienen que estar en el keyring del TARGET, no en el del
+> contenedor.** Con `-r <root>` (que es como instala mklive), xbps lee el
+> keyring **del root**, no el del sistema: sembrarlas en `/var/db/xbps/keys`
+> del contenedor no sirve de nada, y la importación interactiva de la clave
+> puede fallar ("Failed to import pubkey … Resource temporarily unavailable"),
+> con lo que los paquetes salen con "the RSA signature is not valid" y la
+> transacción aborta entera.
+>
+> El sitio donde sembrarlas es **el wrapper de xbps** (`xbps-install-musl.sh`),
+> que es el pegamento entre el host y el target y ya existe para la arch y
+> para los repos:
 
 ```bash
-# en el script del contenedor del workflow, antes del build:
-if [ -d "$OV/var/db/xbps/keys" ]; then
-    mkdir -p /var/db/xbps/keys
-    cp -f "$OV/var/db/xbps/keys/"*.plist /var/db/xbps/keys/ 2>/dev/null || true
+# en live-maker/xbps-install-musl.sh, antes de exec de xbps:
+if [ -n "${NEKO_TRUST_KEYS:-}" ] && [ -n "$root" ]; then
+    mkdir -p "$root/var/db/xbps/keys"
+    cp -f "$NEKO_TRUST_KEYS"/*.plist "$root/var/db/xbps/keys/" 2>/dev/null || true
 fi
+```
+
+```bash
+# en live-maker/neko-builder.sh: de dónde salen las claves y cómo llegan
+# hasta el wrapper (sudo limpia el entorno, así que van explícitas):
+export NEKO_TRUST_KEYS="${includedir}/var/db/xbps/keys"
+sudo env XBPS_INSTALL_CMD="$XBPS_INSTALL_CMD" NEKO_TRUST_KEYS="$NEKO_TRUST_KEYS" \
+    ./mklive.sh "${REPOS[@]}" -i xz -s zstd -L 19 "${cmd_args[@]}"
 ```
 
 > Si no tienes a mano esas plists, se derivan de la clave privada con
