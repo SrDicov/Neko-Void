@@ -264,6 +264,23 @@ jobs:
           (cd "$(dirname "$ISO_FILE")" && sha256sum "$(basename "$ISO_FILE")"-part-* > "$(basename "$ISO_FILE")"-part-sha256.txt)
           cat "$ISO_FILE-part-sha256.txt"
 
+      - name: Drop stale assets for this flavor
+        # El tag es compartido por todos los flavors: si ya hay un asset con el
+        # mismo nombre (build anterior del mismo flavor), el paso de publicar
+        # falla con "Not Found" al intentar actualizarlo.
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          name=$(basename "$ISO_FILE")
+          gh release view iso --repo "$GITHUB_REPOSITORY" --json assets \
+            --jq '.assets[].name' 2>/dev/null |
+              grep -F "$name" |
+              while read -r asset; do
+                gh release delete-asset iso "$asset" --repo "$GITHUB_REPOSITORY" --yes || true
+              done
+
       - name: Publish release
         if: success()
         uses: softprops/action-gh-release@v2
