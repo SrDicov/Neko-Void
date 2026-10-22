@@ -311,16 +311,26 @@ RYOKU_H="
 "
 ```
 
-Y los sets compuestos + sus exports, al final del fichero:
+Y los sets compuestos + sus exports, al final del fichero (después de
+`DEFAULT`, que es donde está definido):
 
 ```bash
+# El set de neko (DEFAULT) no sirve tal cual en un escritorio Ryoku:
+# TLP es excluyente con power-profiles-daemon (la politica de energia y tapa
+# de Ryoku) y la instalacion aborta con "Transaction aborted due to conflicting
+# packages"; y la rice de neko (temas, fuentes, el asistente, el instalador
+# de Void) la sustituye Ryoku con la suya.
+RYOKU_BASE=$(echo ${DEFAULT} | tr ' ' '\n' \
+    | grep -vE '^(tlp|tlp-pd|tlp-rdw|kasha-installer|Neko-Wizard|neko-fonts|neko-icons|neko-themes|neko-backgrounds)$' \
+    | tr '\n' ' ')
+
 RYOKU_N_PACKAGES="
-    ${DEFAULT}
+    ${RYOKU_BASE}
     ${RYOKU_N}
 "
 
 RYOKU_H_PACKAGES="
-    ${DEFAULT}
+    ${RYOKU_BASE}
     ${RYOKU_H}
 "
 
@@ -329,14 +339,13 @@ PACKAGES_RYOKU_N=$(echo ${RYOKU_N_PACKAGES} | tr -s ' ')
 PACKAGES_RYOKU_H=$(echo ${RYOKU_H_PACKAGES} | tr -s ' ')
 ```
 
-`${DEFAULT}` aporta lo mismo que a los demás escritorios: repos de Void
-(`void-repo-nonfree`…), base del sistema, red, audio, drivers, fuentes, multimedia
-y los extras de accesibilidad.
+`${RYOKU_BASE}` aporta lo mismo que `${DEFAULT}` a los demás escritorios:
+repos de Void (`void-repo-nonfree`…), base del sistema, red, audio, drivers,
+fuentes, multimedia y los extras de accesibilidad.
 
-> **Por qué `ryoku-keyring` está en la lista:** ese paquete instala las claves
-> de confianza en `/var/db/xbps/keys/` del rootfs, o sea, deja la imagen
-> capaz de seguir instalando desde los repos de Ryoku. Es la mitad "permanente"
-> de la confianza; la otra mitad (la del build) va en el overlay (§5.4).
+> **Ojo con `emptty`**: el display manager del live **no** está en `DEFAULT`,
+> está en la lista del escritorio de neko (`NIRI=`). Un flavor nuevo que use
+> emptty tiene que nombrarlo en su set, o la imagen no tiene login.
 
 > **`ryoku-desktop` ya arrastra casi todo**: quickshell, Qt6, GTK3, webkit2gtk,
 > mpv, grim, slurp, cava, matugen, ffmpeg, sddm, turnstile, NetworkManager,
@@ -486,6 +495,21 @@ d1:93:22:ea:fc:f3:28:2b:70:0a:14:63:9e:b4:f3:85.plist   ← clave del repo de Ry
 > esté en la lista**, porque xbps no confía en él. Es el error más confuso del
 > proyecto: el repo está y el paquete no aparece.
 
+> **Y las claves tienen que estar también en el contenedor del build**, no solo
+> en la imagen: el build verifica los paquetes que descarga **antes** de
+> instalarlos, y para eso necesita fiarse del repo. Si no están, xbps pregunta
+> por la clave y la importación interactiva puede fallar ("Failed to import
+> pubkey … Resource temporarily unavailable"). La solución es sembrarlas en el
+> keyring del contenedor, antes de construir:
+
+```bash
+# en el script del contenedor del workflow, antes del build:
+if [ -d "$OV/var/db/xbps/keys" ]; then
+    mkdir -p /var/db/xbps/keys
+    cp -f "$OV/var/db/xbps/keys/"*.plist /var/db/xbps/keys/ 2>/dev/null || true
+fi
+```
+
 > Si no tienes a mano esas plists, se derivan de la clave privada con
 > `void/packages/repo/new-signing-key <clave.pem> <destino>` (la herramienta
 > que usa el propio port). El nombre de salida ya es `<huella>.plist`.
@@ -630,6 +654,12 @@ gh workflow run build-iso.yml --repo Neko-Void-Linux/Neko-Void \
 | `bootloader` | `grub` (por defecto) o `limine` |
 | `upload_sourceforge` | `true`/`false` |
 
+> **Un build a la vez.** El workflow tiene
+> `concurrency: {group: neko-build-${{ github.ref }}, cancel-in-progress: true}`:
+> si despachas dos flavors a la vez, **el segundo cancela al primero** (y el
+> primero muere en segundos con `cancelled`). Encadénalos: espera a que uno
+> termine y lanza el siguiente.
+
 El build va en `docker run --privileged` con la imagen de Void glibc
 (`ghcr.io/void-linux/void-glibc:20261001R1`), porque hace falta montar el
 squashfs en un dispositivo loop.
@@ -696,7 +726,17 @@ ls /run/initramfs/live/…      # lo que ve el live montado
 
 **Arreglo**: meter la plist en el overlay con el nombre de la huella (§5.4).
 
-### 11.2 El repo está, la clave está, y aun así no aparece
+### 11.2 `Transaction aborted due to conflicting packages`
+
+**Causa**: `tlp-pd` (el set de neko) es excluyente con
+`power-profiles-daemon`, que `ryoku-desktop` declara como dependencia. Los dos
+gestionan los perfiles de energia y xbps no los deja coexistir.
+
+**Arreglo**: el set de Ryoku no usa el de neko tal cual. Excluye TLP (que
+ademas no hace falta: la politica de energia y tapa la lleva Ryoku) y la rice
+de neko, que Ryoku sustituye con la suya (§4.2).
+
+### 11.3 El repo está, la clave está, y aun así no aparece
 
 **Causa**: la clave se copió con otro nombre (`foo.pub`, `ryoku.key`). xbps
 ignora los ficheros de `/var/db/xbps/keys/` que no se llamen
@@ -704,21 +744,33 @@ ignora los ficheros de `/var/db/xbps/keys/` que no se llamen
 
 **Arreglo**: renombrar la plist a su huella, con los dos puntos.
 
-### 11.3 `[reposync] failed to fetch ... Not Found` y el build entero cae
+El mismo sintoma aparece si la clave esta bien pero **la importacion
+interactiva falla** ("Failed to import pubkey ... Resource temporarily
+unavailable"): entonces el build no tiene la clave en el keyring del contenedor
+y no puede verificar lo que descarga. Se arregla sembrando las claves del
+overlay en el keyring del contenedor antes de construir (§5.4).
+
+El mismo sintoma aparece si la clave esta bien pero **la importacion
+interactiva falla** ("Failed to import pubkey ... Resource temporarily
+unavailable"): entonces el build no tiene la clave en el keyring del contenedor
+y no puede verificar lo que descarga. Se arregla sembrando las claves del
+overlay en el keyring del contenedor antes de construir (§5.4).
+
+### 11.4 `[reposync] failed to fetch ... Not Found` y el build entero cae
 
 **Causa**: un repo **musl** en la lista glibc. No tiene `x86_64-repodata`.
 
 **Arreglo**: quitarlo. La lista glibc y la musl no se mezclan, y
 `check-coherence.sh` lo vigila.
 
-### 11.4 El live arranca y se queda en negro
+### 11.5 El live arranca y se queda en negro
 
 **Causa**: faltan `settings.kdl` y `rebinds.kdl` en el árbol de niri. En niri un
 include ausente es un error de configuración, y no hay sesión.
 
 **Arreglo**: meterlos ficheros generados en el overlay (§5.3).
 
-### 11.5 `hyprpicker: broken, unresolvable shlib 'libhyprutils.so.10'`
+### 11.6 `hyprpicker: broken, unresolvable shlib 'libhyprutils.so.10'`
 
 **Causa**: el `hyprutils` viejo (0.11.0) y el nuevo (0.14.2) **no pueden
 convivir**: viven en repos distintos y cada uno aporta un soname distinto
@@ -731,7 +783,7 @@ la pila nueva, revisión superior) sustituye al de Void, porque xbps elige la
 versión mayor ✓. Si tu imagen usa el `hyprpicker` de Void, quítalo del set o
 asegúrate de que el del z-repo está disponible.
 
-### 11.6 El build falla a mitad de la descarga
+### 11.7 El build falla a mitad de la descarga
 
 **Causa**: los mirrors de Void se reindexan cada ~20 minutos y hay una ventana
 en la que el índice y los ficheros no cuadran
@@ -740,14 +792,14 @@ signature`). Es infraestructura, no el build.
 
 **Arreglo**: reintentar. El CI ya lo hace **3 veces** con 30 s de espera ✓.
 
-### 11.7 El compositor no arranca en el live: "session not found"
+### 11.8 El compositor no arranca en el live: "session not found"
 
 **Causa**: `AUTOLOGIN_SESSION` en `etc/emptty/conf` no coincide con ningún
 `.desktop` de `/usr/share/wayland-sessions/`.
 
 **Arreglo**: usa `niri` o `hyprland`, exactamente como los nombra el paquete.
 
-### 11.8 El live entra pero no hay shell de Ryoku
+### 11.9 El live entra pero no hay shell de Ryoku
 
 **Causa**: la configuración del compositor no llegó al home del live, o el
 proveedor no puede escribir sus ficheros generados.
@@ -756,7 +808,7 @@ proveedor no puede escribir sus ficheros generados.
 overlay, y que los permisos son de `anon` (el CI hace
 `chown -R anon:anon "$OV"`).
 
-### 11.9 `set -e` mata al instalador
+### 11.10 `set -e` mata al instalador
 
 **Causa**: `installer.sh` usa el código de salida de `dialog` (1 = "Atrás") y de
 `grep` (1 = "sin coincidencia") como **control de flujo**. Con `errexit` el
